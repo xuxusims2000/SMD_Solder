@@ -1,6 +1,4 @@
 #include "SPI_Comunication.h"
-#include "driver/spi_master.h"
-#include "esp_log.h"
 
 // TAG for logging
 static const char *TAG = "MAX6675";
@@ -15,7 +13,14 @@ esp_err_t init_spi_bus() {
         .max_transfer_sz = 16,      // MAX6675 only transfers 16 bits
     };
 
-    return spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    esp_err_t ret = spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize SPI bus: %s", esp_err_to_name(ret));
+        return ret;
+    }
+
+    ESP_LOGI(TAG, "SPI bus initialized successfully");
+    return ESP_OK;
 }
 
 esp_err_t add_max6675_device(spi_device_handle_t *handle) {
@@ -26,7 +31,14 @@ esp_err_t add_max6675_device(spi_device_handle_t *handle) {
         .queue_size = 1,             // Transactions queued
     };
 
-    return spi_bus_add_device(SPI2_HOST, &devcfg, handle);
+    esp_err_t ret = spi_bus_add_device(SPI2_HOST, &devcfg, handle);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to add MAX6675 device: %s", esp_err_to_name(ret));
+        return ret;
+    }
+
+    ESP_LOGI(TAG, "MAX6675 device added successfully");
+    return ESP_OK;
 }
 
 float read_max6675(spi_device_handle_t handle) {
@@ -48,5 +60,7 @@ float read_max6675(spi_device_handle_t handle) {
         return -1.0; // Indicate an error
     }
 
-    return (raw_data >> 3) * 0.25;
+    float temperature = (raw_data >> 3) * 0.25;
+    ESP_LOGI(TAG, "Temperature read: %.2f°C", temperature);
+    return temperature;
 }

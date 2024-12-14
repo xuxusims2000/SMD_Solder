@@ -17,7 +17,9 @@
     "files.associations": {
         "spi_master.h": "c",
         "spi_common.h": "c",
-        "gpio.h": "c"
+        "gpio.h": "c",
+        "spi_comunication.h": "c",
+        "task.h": "c"
     },
     "idf.flashType": "UART"
 }

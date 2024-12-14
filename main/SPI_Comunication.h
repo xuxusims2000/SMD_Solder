@@ -1,13 +1,11 @@
+#ifndef SPI_COMUNICATION_H
+#define SPI_COMUNICATION_H
 
-#ifndef SPI_Comunication_H
-#define SPI_Comunication_H
-
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include <stdint.h>
+#include <esp_err.h>
 #include "driver/spi_master.h"
+#include "esp_log.h" // Include for logging macros
 #include "driver/gpio.h"
-#include "esp_log.h"
 
 // Define constants or macros
 #define PIN_NUM_MISO GPIO_NUM_19
@@ -19,4 +17,4 @@ esp_err_t init_spi_bus(void);
 esp_err_t add_max6675_device(spi_device_handle_t *handle);
 float read_max6675(spi_device_handle_t handle);
 
-#endif // MY_FUNCTIONS_H
+#endif 
