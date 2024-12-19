@@ -5,6 +5,16 @@
 #include "freertos/task.h"
 #include "SPI_Comunication.h"
 #include "driver/gpio.h"
+#include "driver/ledc.h"
+
+
+esp_err_t set_pwm(void);
+
+esp_err_t set_pwm(void)
+{
+    ledc_channel_config_t cahnnelConfig = {0};
+
+}
 
 void app_main(void) {
     
@@ -31,7 +41,7 @@ void app_main(void) {
         } else {
             ESP_LOGE("MAIN", "Failed to read temperature");
         }
-        
+
         vTaskDelay(pdMS_TO_TICKS(1000)); // Delay 1 second
     }
 }

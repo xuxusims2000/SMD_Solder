@@ -19,7 +19,8 @@
         "spi_common.h": "c",
         "gpio.h": "c",
         "spi_comunication.h": "c",
-        "task.h": "c"
+        "task.h": "c",
+        "ledc.h": "c"
     },
     "idf.flashType": "UART"
 }
