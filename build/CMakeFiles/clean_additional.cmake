@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.16)
 
 if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   file(REMOVE_RECURSE
-  "SMD_Solder.v1.bin"
-  "SMD_Solder.v1.map"
+  "SMD_Solder.v1.2.bin"
+  "SMD_Solder.v1.2.map"
   "bootloader\\bootloader.bin"
   "bootloader\\bootloader.elf"
   "bootloader\\bootloader.map"

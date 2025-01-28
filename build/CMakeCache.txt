@@ -14,6 +14,9 @@
 # EXTERNAL cache entries
 ########################
 
+//No help, variable specified on the command line.
+CCACHE_ENABLE:UNINITIALIZED=0
+
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=C:/Users/Usuario/.espressif/tools/xtensa-esp-elf/esp-13.2.0_20240530/xtensa-esp-elf/bin/xtensa-esp32-elf-addr2line.exe
 
@@ -210,7 +213,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=SMD_Solder.v1
+CMAKE_PROJECT_NAME:STATIC=SMD_Solder.v1.2
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION:STATIC=3.6.2
@@ -347,7 +350,22 @@ Mbed TLS_IS_TOP_LEVEL:STATIC=OFF
 Mbed TLS_SOURCE_DIR:STATIC=C:/Users/Usuario/esp/v5.3.2/esp-idf/components/mbedtls/mbedtls
 
 //No help, variable specified on the command line.
+PYTHON:UNINITIALIZED=C:\Users\Usuario\.espressif\python_env\idf5.3_py3.11_env\Scripts\python.exe
+
+//No help, variable specified on the command line.
 PYTHON_DEPS_CHECKED:UNINITIALIZED=1
+
+//No help, variable specified on the command line.
+SDKCONFIG:UNINITIALIZED=c:\Users\Usuario\Desktop\Trastitos\ESP32\SMD_Solder.v1\sdkconfig
+
+//Value Computed by CMake
+SMD_Solder.v1.2_BINARY_DIR:STATIC=C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build
+
+//Value Computed by CMake
+SMD_Solder.v1.2_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+SMD_Solder.v1.2_SOURCE_DIR:STATIC=C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1
 
 //Value Computed by CMake
 SMD_Solder.v1_BINARY_DIR:STATIC=C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build

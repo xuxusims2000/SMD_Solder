@@ -1,15 +1,15 @@
 {
     "version":            "1.1",
-    "project_name":       "SMD_Solder.v1",
-    "project_version":    "f223ba4-dirty",
+    "project_name":       "SMD_Solder.v1.2",
+    "project_version":    "89e6c5a-dirty",
     "project_path":       "C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1",
     "idf_path":           "C:/Users/Usuario/esp/v5.3.2/esp-idf",
     "build_dir":          "C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build",
     "config_file":        "C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/sdkconfig",
     "config_defaults":    "",
     "bootloader_elf":     "C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/bootloader/bootloader.elf",
-    "app_elf":            "SMD_Solder.v1.elf",
-    "app_bin":            "SMD_Solder.v1.bin",
+    "app_elf":            "SMD_Solder.v1.2.elf",
+    "app_bin":            "SMD_Solder.v1.2.bin",
     "build_type":         "flash_app",
     "git_revision":       "v5.3.2",
     "target":             "esp32",
@@ -1180,7 +1180,7 @@
             "managed_reqs": [],
             "managed_priv_reqs": [],
             "file": "C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/esp-idf/main/libmain.a",
-            "sources": [ "C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/main/SPI_Comunication.c", "C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/main/main.c" ],
+            "sources": [ "C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/main/main.c" ],
             "include_dirs": [ "." ]
         },
         "mbedtls": {
