@@ -1,0 +1,14 @@
+# Ignore build and cache files
+build/
+sdkconfig
+sdkconfig.old
+sdkconfig.*
+CMakeCache.txt
+CMakeFiles/
+*.elf
+*.bin
+*.map
+*.d
+*.o
+*.a
+*.log

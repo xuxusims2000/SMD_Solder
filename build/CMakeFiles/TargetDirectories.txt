@@ -10,7 +10,7 @@ C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/CMakeFiles/monitor.
 C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/CMakeFiles/flash.dir
 C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/CMakeFiles/encrypted-flash.dir
 C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/CMakeFiles/_project_elf_src.dir
-C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/CMakeFiles/SMD_Solder.v1.2.elf.dir
+C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/CMakeFiles/SMD_Solder.v1.elf.dir
 C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/CMakeFiles/size.dir
 C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/CMakeFiles/size-files.dir
 C:/Users/Usuario/Desktop/Trastitos/ESP32/SMD_Solder.v1/build/CMakeFiles/size-components.dir

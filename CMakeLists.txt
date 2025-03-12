@@ -4,5 +4,20 @@
 # CMakeLists in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.16)
 
+set(EXTRA_COMPONENT_DIRS components) #Here we tell CMake where to look for extra components that our project might use.
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(SMD_Solder.v1.2)
+project(SMD_Solder.v1) 
+
+# Include directories
+# Specify the directories to search for header files
+#include_directories(
+ #   ${CMAKE_SOURCE_DIR}/include
+
+ # Source directories
+# Add subdirectories for source code, libraries, tests, and tools
+#add_subdirectory(src)
+#add_subdirectory(lib)
+#add_subdirectory(tests)
+#add_subdirectory(tools)
+  
