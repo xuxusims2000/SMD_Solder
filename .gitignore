@@ -12,3 +12,9 @@ CMakeFiles/
 *.o
 *.a
 *.log
+
+# Ignore VS Code settings (optional)
+.vscode/
+
+# Ignore Dev Container settings (optional)
+.devcontainer/
