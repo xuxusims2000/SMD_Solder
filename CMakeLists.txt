@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.16)
 set(EXTRA_COMPONENT_DIRS components) #Here we tell CMake where to look for extra components that our project might use.
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(SMD_Solder.v1) 
+project(SMD_Solder) 
 
 # Include directories
 # Specify the directories to search for header files
