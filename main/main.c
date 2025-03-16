@@ -1,10 +1,13 @@
 #include <stdio.h>
 
+#include <stdint.h>
 #include "esp_log.h" 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
+
+#include "Temp_Ctrl.h"
 
 #include "driver/spi_master.h"
 
@@ -160,6 +163,7 @@ void app_main(void)
     ret = add_max6675_device(&max6675);           
     set_pwm();
     set_pwm_duty(512);
+    uint16_t a = reconocer();
 
     while (1) {
          
