@@ -163,7 +163,7 @@ void app_main(void)
     ret = add_max6675_device(&max6675);           
     set_pwm();
     set_pwm_duty(512);
-    uint16_t a = reconocer();
+    
 
     while (1) {
          

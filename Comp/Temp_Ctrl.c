@@ -3,12 +3,6 @@
 #include <Temp_Ctrl.h>
 
 
-
-// PID Constants (Tune these values)
-#define Kp 2.0      // Proportional gain
-#define Ki 0.5      // Integral gain
-#define Kd 1.0      // Derivative gain
-
 // PID Variables
 double last_error = 0.0;
 double integral = 0.0;
@@ -40,7 +34,3 @@ double compute_pid(double setpoint, double current_temp) {
 
 
 
-uint16_t reconocer (void){
-    return 42;
-
-}
