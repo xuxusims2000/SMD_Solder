@@ -9,7 +9,7 @@ double integral = 0.0;
 const double dt = 0.5; // Time step (in seconds), adjust based on your loop timing
 
 // PID Controller Function
-double compute_pid(double setpoint, double current_temp) {
+uint64_t compute_pid(double setpoint, double current_temp) {
     // Compute error
     double error = setpoint - current_temp;
 
@@ -22,15 +22,18 @@ double compute_pid(double setpoint, double current_temp) {
     // Compute PID output
     double output = (Kp * error) + (Ki * integral) + (Kd * derivative);
 
-    // Constrain output to valid PWM range (0 to 1023 for 10-bit PWM)
-    if (output > 1023) output = 1023;
-    if (output < 0) output = 0;
-
     // Save current error for next iteration
     last_error = error;
 
 return output;
 }
+
+uint16_t Temperature2PWM(uint16_t temperature){
+    uint16_t new_duty = 0;
+    new_duty = (temperature * 1023) / 100;
+    return new_duty;
+}
+
 
 
 

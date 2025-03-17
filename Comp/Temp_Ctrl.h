@@ -9,4 +9,5 @@
 #define Kd 1.0      // Derivative gain
 
 
-double compute_pid(double setpoint, double current_temp);
+uint64_t compute_pid(double setpoint, double current_temp);
+uint16_t Temperature2PWM(uint16_t temperature);
