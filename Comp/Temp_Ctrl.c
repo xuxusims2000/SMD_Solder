@@ -29,7 +29,7 @@ double compute_pid(double setpoint, double current_temp) {
     // Save current error for next iteration
     last_error = error;
 
-    return output;
+return output;
 }
 
 
