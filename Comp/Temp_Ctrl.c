@@ -30,7 +30,8 @@ return output;
 
 uint16_t Temperature2PWM(uint16_t temperature){
     uint16_t new_duty = 0;
-    new_duty = (temperature * 1023) / 100;
+
+    new_duty = (temperature * 1023) / Tmax;
     return new_duty;
 }
 
