@@ -41,6 +41,7 @@ void app_main(void)
         new_temperature = compute_pid(50,current_temperature );
 
         new_duty = Temperature2PWM(new_temperature);
+        set_pwm_duty(new_duty);
 
         vTaskDelay(pdMS_TO_TICKS(1000)); // Delay 1 second
     }

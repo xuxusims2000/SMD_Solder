@@ -8,6 +8,8 @@
 #define Ki 0.5      // Integral gain
 #define Kd 1.0      // Derivative gain
 
+#define Tmax //Tempere max that hotplate can get
+
 
 uint64_t compute_pid(double setpoint, double current_temp);
 uint16_t Temperature2PWM(uint16_t temperature);
