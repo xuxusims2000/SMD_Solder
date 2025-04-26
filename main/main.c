@@ -8,7 +8,7 @@
 #include "driver/ledc.h"
 
 #include "Temp_Ctrl.h"
-#include "I2C_Config.h"
+#include "SPI_Config.h"
 #include "PWM_Config.h"
 
 #include "driver/spi_master.h"
