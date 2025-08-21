@@ -14,7 +14,6 @@ extern "C" {
  *      INCLUDES
  *********************/
 #include "../image/lv_image.h"
-#include "../../misc/lv_types.h"
 
 #if LV_USE_ANIMIMG != 0
 
@@ -112,13 +111,6 @@ uint32_t lv_animimg_get_duration(lv_obj_t * img);
  * @return      the repeat count
  */
 uint32_t lv_animimg_get_repeat_count(lv_obj_t * img);
-
-/**
- * Get the image animation underlying animation.
- * @param img   pointer to an animation image object
- * @return      the animation reference
- */
-lv_anim_t * lv_animimg_get_anim(lv_obj_t * img);
 
 #endif /*LV_USE_ANIMIMG*/
 

@@ -18,7 +18,6 @@ extern "C" {
 
 #if defined(LV_LIBINPUT_XKB) && LV_LIBINPUT_XKB
 
-#include "../../misc/lv_types.h"
 #include <stdbool.h>
 #include <xkbcommon/xkbcommon.h>
 

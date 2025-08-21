@@ -216,11 +216,11 @@ static void display_release_cb(lv_event_t * e)
 
         /* clear display buffer */
         if(disp->buf_1) {
-            lv_free(disp->buf_1->data);
+            lv_free(disp->buf_1);
             disp->buf_1 = NULL;
         }
         if(disp->buf_2) {
-            lv_free(disp->buf_2->data);
+            lv_free(disp->buf_2);
             disp->buf_2 = NULL;
         }
 

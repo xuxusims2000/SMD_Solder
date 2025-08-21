@@ -4,19 +4,29 @@
 #include "esp_log.h" 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_err.h"
 //#include "driver/gpio.h"
 #include "driver/ledc.h"
 
 #include "Temp_Ctrl.h"
 #include "SPI_Config.h"
 #include "PWM_Config.h"
+#include "ILI9341_screen.h"
 
 #include "driver/spi_master.h"
+#include "lvgl.h"
 
 
 
 void app_main(void)
 {
+
+  #ifdef TEST 
+  main_screen();
+
+  #else
+    esp_log_level_set("MAIN", ESP_LOG_INFO); // Set log level for MAIN tag
+
 //initialize spi
     esp_err_t ret = init_spi_bus();
     spi_device_handle_t max6675;
@@ -45,4 +55,6 @@ void app_main(void)
 
         vTaskDelay(pdMS_TO_TICKS(1000)); // Delay 1 second
     }
+
+    #endif
 }
