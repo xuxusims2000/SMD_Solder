@@ -1,7 +1,7 @@
 idf_component_register(
     SRCS
         "scr/ILI9341_screen.c"
-        "scr/SPI_Config.c"
+        "scr/Temp_Sensing.c"
         "scr/Temp_Ctrl.c"
         "scr/PWM_Config.c"
         "scr/Screen_design.c"

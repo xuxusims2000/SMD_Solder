@@ -9,7 +9,7 @@
 #include "driver/ledc.h"
 
 #include "Temp_Ctrl.h"
-#include "SPI_Config.h"
+#include "Temp_Sensing.h"
 #include "PWM_Config.h"
 #include "ILI9341_screen.h"
 #include "Tests.h"
@@ -27,7 +27,7 @@ void app_main(void)
 
   #else
 
-  
+
     esp_log_level_set("MAIN", ESP_LOG_INFO); // Set log level for MAIN tag
 
 //initialize spi
