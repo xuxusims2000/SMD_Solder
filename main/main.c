@@ -12,6 +12,7 @@
 #include "SPI_Config.h"
 #include "PWM_Config.h"
 #include "ILI9341_screen.h"
+#include "Tests.h"
 
 #include "driver/spi_master.h"
 #include "lvgl.h"
@@ -22,9 +23,11 @@ void app_main(void)
 {
 
   #ifdef TEST 
-  main_screen();
+  test_function();
 
   #else
+
+  
     esp_log_level_set("MAIN", ESP_LOG_INFO); // Set log level for MAIN tag
 
 //initialize spi

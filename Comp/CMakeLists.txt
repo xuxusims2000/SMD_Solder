@@ -1,7 +1,18 @@
 idf_component_register(
-    SRCS "ILI9341_screen.c" "SPI_Config.c" "Temp_Ctrl.c" "PWM_Config.c" "Screen_design.c" 
-    INCLUDE_DIRS "."
-    REQUIRES lvgl driver esp_lcd esp_lcd_ili9341 esp_lcd_touch_xpt2046
+    SRCS
+        "scr/ILI9341_screen.c"
+        "scr/SPI_Config.c"
+        "scr/Temp_Ctrl.c"
+        "scr/PWM_Config.c"
+        "scr/Screen_design.c"
+        "Tests.c"
+    INCLUDE_DIRS
+        "includes"
+        "scr"
+    REQUIRES
+        lvgl
+        driver
+        esp_lcd
+        esp_lcd_ili9341
+        esp_lcd_touch_xpt2046
 )
-
-
