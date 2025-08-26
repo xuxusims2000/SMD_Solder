@@ -9,6 +9,7 @@ idf_component_register(
     INCLUDE_DIRS
         "includes"
         "scr"
+        "."
     REQUIRES
         lvgl
         driver
