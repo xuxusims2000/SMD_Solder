@@ -125,7 +125,7 @@
 
 
 
-void main_screen(void)
+void Test_main_screen(void)
 {
     ESP_LOGI(TAG, "Turn off LCD backlight");
     gpio_config_t bk_gpio_config = {

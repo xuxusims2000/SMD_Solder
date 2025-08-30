@@ -8,6 +8,7 @@
 void test_function() {
     // Test implementation goes here
 
-    main_screen();
-    //temperature_sensing();
+    Test_main_screen();
+    //Test_temperature_sensing();
+    //Test_PID_control_();
 }

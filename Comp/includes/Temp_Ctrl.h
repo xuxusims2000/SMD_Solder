@@ -13,3 +13,7 @@
 
 uint64_t compute_pid(double setpoint, double current_temp);
 uint16_t Temperature2PWM(uint16_t temperature);
+
+void Test_PID_control_(void);
+
+

@@ -51,7 +51,8 @@ void example_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *p
 void example_lvgl_touch_cb(lv_indev_t *indev, lv_indev_data_t *data);
 void example_increase_lvgl_tick(void *arg);
 void example_lvgl_port_task(void *arg);
-void main_screen(void);
+
+void Test_main_screen(void);
 
 
 

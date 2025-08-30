@@ -35,6 +35,23 @@ uint16_t Temperature2PWM(uint16_t temperature){
     return new_duty;
 }
 
+void Test_PID_control_(){
+
+    //uint16_t new_duty = 0;
+    //ret = set_pwm();
+    //set_pwm_duty(0);
+   
+    //uint16_t new_duty = 0;
+    //new_temperature = compute_pid(50,current_temperature );
+
+    //new_duty = Temperature2PWM(new_temperature);
+    //set_pwm_duty(new_duty);
+
+    //vTaskDelay(pdMS_TO_TICKS(1000)); // Delay 1 second
+    
+
+}
+
 
 
 
