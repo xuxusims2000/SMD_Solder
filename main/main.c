@@ -1,22 +1,17 @@
-#include <stdio.h>
 
-#include <stdint.h>
-#include "esp_log.h" 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_err.h"
-//#include "driver/gpio.h"
-#include "driver/ledc.h"
+#include "main.h"
 
-#include "Temp_Ctrl.h"
-#include "Temp_Sensing.h"
-#include "PWM_Config.h"
-#include "ILI9341_screen.h"
-#include "Tests.h"
+void Manager_SMD(){
 
-#include "driver/spi_master.h"
-#include "lvgl.h"
 
+    while(1){
+
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+
+
+}
 
 
 void app_main(void)
@@ -40,7 +35,4 @@ xTaskCreate(Manager_SMD, "Manager_SMD Task", 2048, NULL, 1, NULL);
     #endif
 }
 
-void Manager_SMD(){
 
-
-}

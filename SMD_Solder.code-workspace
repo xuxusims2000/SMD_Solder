@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"esp_lcd_touch_xpt2046.h": "c"
+		}
+	}
+}
