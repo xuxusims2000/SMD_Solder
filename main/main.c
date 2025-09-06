@@ -55,7 +55,8 @@ void Manager_SMD_Requesting(void){
 
     /* ----------Temperature_Sensing--------------*/
         // Callbaks for the module
-        Temperature_Sensing_Request();
+        
+        Temp_Sensing_Request();
 
 
     /* ----------Temperature_Contrl---------------*/

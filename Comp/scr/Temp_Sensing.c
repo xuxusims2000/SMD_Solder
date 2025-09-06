@@ -3,6 +3,18 @@
 #include "Temp_Sensing.h"
 
 
+typedef struct {
+    TempSensingState state;
+    // Add other members as needed, e.g., timers, callbacks
+} TempSensing_t;
+
+
+static TempSensing_t temp_sensing = {
+    .state = TEMP_SENSING_POWER_OFF,
+    // Initialize other members as needed
+};
+
+
 
 void Temp_Sensing_Init(void){
 
@@ -16,7 +28,7 @@ void Temp_Sensing_Init(void){
 void Temp_Sensing_Request(void){
 
     //Resources needed for the module -> timers , submodules , callbaks
-
+    temp_sensing.state = TEMP_SENSING_RQUESTING;
 
 }
 
