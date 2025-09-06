@@ -5,11 +5,17 @@
 
 
 void Temp_Ctrl_Init(void){
-    // Initialize PID variables if needed
 
+
+    xTaskCreate(Temp_Ctrl_Task, "Tempaerature_control_Task", 2048, NULL, 1, NULL);
 }
 
+void Temp_Ctrl_Task(void){
 
+    while(1){
+        
+    }
+}
 
 // PID Variables
 double last_error = 0.0;

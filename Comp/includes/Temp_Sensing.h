@@ -16,6 +16,8 @@
 void Temp_Sensing_Init(void);
 void Temp_Sensing_Task(void);
 
+void Temp_Sensing_Request(void);
+
 esp_err_t init_spi_bus(void); 
 esp_err_t add_max6675_device(spi_device_handle_t *handle);
 float read_max6675(spi_device_handle_t handle);

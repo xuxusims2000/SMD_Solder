@@ -23,7 +23,11 @@
 #include "driver/spi_master.h"
 #include "lvgl.h"
 
+void Manager_SMD_Requesting(void);
+
 void Manager_SMD_Task(void );
+
+void Manager_SMD_Starting(void);
 
 typedef enum {
     POWER_OFF,
@@ -37,7 +41,7 @@ typedef enum {
 typedef struct {
 
     SolderingManagerState state;
-    uint8_t targetTemperature;
+    TimerHandle_t Manager_SMD_UpdateTemperature_Timer;
  
 } Manager_SMD;
 
