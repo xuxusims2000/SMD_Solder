@@ -10,6 +10,7 @@
 
 #define Tmax 350 //Tempere max that hotplate can get
 
+void Temp_Ctrl_Init(void);
 
 uint64_t compute_pid(double setpoint, double current_temp);
 uint16_t Temperature2PWM(uint16_t temperature);

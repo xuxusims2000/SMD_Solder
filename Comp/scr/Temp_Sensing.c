@@ -2,9 +2,40 @@
 
 #include "Temp_Sensing.h"
 
+
+
+void Temp_Sensing_Init(void){
+
+    
+    xTaskCreate(Temp_Sensing_Task, "Manager_SMD Task", 2048, NULL, 1, NULL);
+    
+    esp_err_t ret = init_spi_bus(); 
+    
+}
+
+void Temp_Sensing_Task(void){
+
+    spi_device_handle_t max6675;
+    esp_err_t ret = add_max6675_device(&max6675);
+
+    uint16_t new_temperature = 0;
+     
+    while (1) {
+               
+        
+        //read the temperature from the amplifier of the sensro (MAX6675)
+        float current_temperature = read_max6675(max6675); // temperature in Celsius
+        if (current_temperature >= 0) {
+            ESP_LOGI("MAIN", "Temperature: %.2f°C", current_temperature);
+        } else {
+            ESP_LOGE("MAIN", "Failed to read temperature");
+        }
+    }
+}
+
 /*--------------------------------------------------------------------------- SPI ----------------------------------------------------------------------------*/ 
 
-;
+
 
 // TAG for logging
 static const char *TAG = "MAX6675";

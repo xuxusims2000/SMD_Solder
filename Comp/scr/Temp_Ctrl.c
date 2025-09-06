@@ -3,6 +3,14 @@
 #include <Temp_Ctrl.h>
 
 
+
+void Temp_Ctrl_Init(void){
+    // Initialize PID variables if needed
+
+}
+
+
+
 // PID Variables
 double last_error = 0.0;
 double integral = 0.0;

@@ -23,6 +23,25 @@
 #include "driver/spi_master.h"
 #include "lvgl.h"
 
-void Manager_SMD(void );
+void Manager_SMD_Task(void );
+
+typedef enum {
+    POWER_OFF,
+    REQUESTING,
+    REQUESTED,
+    SOLDERING,
+    RELAXED,  
+    REALISING
+} SolderingManagerState;
+
+typedef struct {
+
+    SolderingManagerState state;
+    uint8_t targetTemperature;
+ 
+} Manager_SMD;
+
+
+
 
 #endif
