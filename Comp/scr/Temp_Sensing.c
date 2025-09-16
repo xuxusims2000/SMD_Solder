@@ -3,6 +3,10 @@
 #include "Temp_Sensing.h"
 
 
+
+void tempSensing_Requesting(void);
+
+
 typedef struct {
     TempSensingState state;
     // Add other members as needed, e.g., timers, callbacks
@@ -10,7 +14,7 @@ typedef struct {
 
 
 static TempSensing_t temp_sensing = {
-    .state = TEMP_SENSING_POWER_OFF,
+    .state = TEMP_SENSING_UNDEFINED,
     // Initialize other members as needed
 };
 
@@ -18,27 +22,68 @@ static TempSensing_t temp_sensing = {
 
 void Temp_Sensing_Init(void){
 
+    ESP_LOGI("Temp_sensing", "INIT");
+   
     
-    xTaskCreate(Temp_Sensing_Task, "Temp_Sensing_Task Task", 2048, NULL, 1, NULL);
+    esp_err_t ret = init_spi_bus();
+    spi_device_handle_t max6675;
+    ret = add_max6675_device(&max6675);
+
+    //NOT SHURE BUT MABY NEED SEMAPHORE OR MUTEX
+
+    temp_sensing.state = TEMP_SENSING_POWER_OFF;
     
-    esp_err_t ret = init_spi_bus(); 
-    
+    xTaskCreate(Temp_Sensing_Task, "Temp_Sensing_Task_Task", 2048, NULL, 1, NULL);
 }
 
 void Temp_Sensing_Request(void){
 
     //Resources needed for the module -> timers , submodules , callbaks
-    temp_sensing.state = TEMP_SENSING_RQUESTING;
+
+    //need of semaphore or mutex
+    //chck if the semaphore is available
+    // if yes set the application callbacks 
+        //signalsSet (signarl request)
+        temp_sensing.state = TEMP_SENSING_RQUESTING;
 
 }
 
 void Temp_Sensing_Task(void){
 
-
      
     while (1) {
                
+        switch (temp_sensing.state)
+        {
+        case TEMP_SENSING_POWER_OFF:
+            
+            ESP_LOGI("Temp_sensing", "STATE: POWER_OFF");
+
+            //SignalWait wait for the request signal
+
+            break;
+
+        case TEMP_SENSING_RQUESTING:
         
+            ESP_LOGI("Temp_sensing", "STATE: REQUESTING");
+
+            tempSensing_Requesting();
+
+
+            break;
+
+        case TEMP_SENSING_REQUESTED:
+        /* code */
+            break;
+
+        case TEMP_SENSING_RELEASING:
+            /* code */
+            break;
+
+        
+        default:
+            break;
+        } 
 
     }
 }
@@ -133,4 +178,13 @@ void Test_temperature_sensing(){
             ESP_LOGE("MAIN", "Failed to read temperature");
         }
     }
+}
+
+
+/* -------------------- Sensing functions ------------------------*/
+
+
+void tempSensing_Requesting(void)
+{
+
 }

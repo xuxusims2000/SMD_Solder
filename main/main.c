@@ -11,6 +11,8 @@ Manager_SMD mainSolder = {
 };
 
 
+
+
 void app_main(void)
 {
 
@@ -34,6 +36,9 @@ void app_main(void)
 
     #endif
 }
+
+
+
 
 
 void Manager_SMD_Requesting(void){

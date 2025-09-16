@@ -12,6 +12,7 @@
 #define PIN_NUM_CS   GPIO_NUM_5
 
 typedef enum {
+    TEMP_SENSING_UNDEFINED, 
     TEMP_SENSING_POWER_OFF, 
     TEMP_SENSING_RQUESTING,
     TEMP_SENSING_REQUESTED,
@@ -19,10 +20,6 @@ typedef enum {
     TEMP_SENSING_START
 } TempSensingState;
 
-typedef struct {
-    TempSensingState state;
-    // Add other members as needed, e.g., timers, callbacks
-} TempSensing_t;
 
 
 // Declare functions
