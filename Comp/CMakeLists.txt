@@ -6,9 +6,11 @@ idf_component_register(
         "scr/PWM_Config.c"
         "scr/Screen_design.c"
         "Tests.c"
+        "Useful/Useful.c"
     INCLUDE_DIRS
         "includes"
         "scr"
+        "Useful"
         "."
     REQUIRES
         lvgl
