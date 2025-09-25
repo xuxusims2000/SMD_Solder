@@ -4,6 +4,9 @@
 #include "Tests.h"
 #include "ILI9341_screen.h"
 
+TaskHandle_t task1Handle = NULL;
+TaskHandle_t task2Handle = NULL;
+
 void Test_task_manaement_signals(void);
 void task1(void *pvParameters);
 void task2(void *pvParameters);
@@ -26,7 +29,7 @@ void Test_task_manaement_signals(void){
     xTaskCreate(task1, "Task1", 2048, NULL, 2, &task1Handle);
     xTaskCreate(task2, "Task2", 2048, NULL, 2, &task2Handle);
 
-    printf("Task management signals test completed.\n");
+    printf("Task app_main() reached the end.\n");
 }
 
 void task1(void *pvParameters){
@@ -79,7 +82,8 @@ void task2(void *pvParameters){
          switch (state)
          {
          case STATE1B:
-            vTaskDelay(pdMS_TO_TICKS(2000));
+            printf("Task2: Delaying for 5000 ms before sending SIGNAL A (0x01)\n");
+            vTaskDelay(pdMS_TO_TICKS(5000));
                 printf("Task2: Sending SIGNAL A (0x01)\n");
                 xTaskNotify(task1Handle, 0x01, eSetBits);
                 state = STATE2B;
