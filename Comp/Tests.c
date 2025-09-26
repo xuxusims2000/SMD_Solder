@@ -12,16 +12,15 @@ void task1(void *pvParameters);
 void task2(void *pvParameters);
 
 void test_function() {
-    // Test implementation goes here
 
     //Test_main_screen();
-    Test_task_manaement_signals();
+    Test_task_managment_signals();
     //Test_temperature_sensing();
     //Test_PID_control_();
 }
 
 
-void Test_task_manaement_signals(void){
+void Test_task_managment_signals(void){
 
     // Example test code for task management signals
     printf("Starting task management signals test...\n");

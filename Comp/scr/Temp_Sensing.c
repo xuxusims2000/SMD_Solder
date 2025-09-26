@@ -9,12 +9,20 @@ void tempSensing_Requesting(void);
 
 typedef struct {
     TempSensingState state;
+
+    uint32_t signals;  // Bitmask for signals
+
+    TaskHandle_t Task_Handle;
+    SemaphoreHandle_t xSemaphoreHandle;
     // Add other members as needed, e.g., timers, callbacks
 } TempSensing_t;
 
 
 static TempSensing_t temp_sensing = {
     .state = TEMP_SENSING_UNDEFINED,
+    .signals = 0,
+    .Task_Handle= NULL,
+    .xSemaphoreHandle = NULL,
     // Initialize other members as needed
 };
 
@@ -44,7 +52,9 @@ void Temp_Sensing_Request(void){
     //chck if the semaphore is available
     // if yes set the application callbacks 
         //signalsSet (signarl request)
-        temp_sensing.state = TEMP_SENSING_RQUESTING;
+    temp_sensing.state = TEMP_SENSING_RQUESTING;
+    xTaskNotify(temp_sensing.Task_Handle, TEMP_SENSING_SIGNAL_REQUESTED, eSetBits);
+   
 
 }
 
@@ -60,6 +70,14 @@ void Temp_Sensing_Task(void){
             ESP_LOGI("Temp_sensing", "STATE: POWER_OFF");
 
             //SignalWait wait for the request signal
+            //xEventGroupWaitBits(signalGroup, SIGNAL_REQUEST, pdTRUE, pdFALSE, portMAX_DELAY);
+              xTaskNotifyWait(
+                0,            // don’t clear on entry
+                ULONG_MAX,    // clear all bits on exit
+                &temp_sensing.signals, // store value
+                portMAX_DELAY // wait forever
+            );
+
 
             break;
 
