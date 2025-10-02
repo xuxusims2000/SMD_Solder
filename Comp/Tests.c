@@ -2,7 +2,9 @@
 
 //In this file diferent tests can be run just uncoment the one you want to test
 #include "Tests.h"
+
 #include "ILI9341_screen.h"
+#include "Temp_Sensing.h"
 
 TaskHandle_t task1Handle = NULL;
 TaskHandle_t task2Handle = NULL;
@@ -14,9 +16,17 @@ void task2(void *pvParameters);
 void test_function() {
     // Test implementation goes here
 
+    //-------Structur tests----------------
+    //Test_task_manaement_signals();
+
+
+    //-------Module temperature sensing tests----------------
+    //Test_temperature_sensing_0();
+    Test_temperature_sensing_1();
+
+
     //Test_main_screen();
-    Test_task_manaement_signals();
-    //Test_temperature_sensing();
+    
     //Test_PID_control_();
 }
 
@@ -62,6 +72,7 @@ void task1(void *pvParameters){
             break;
         case STATE2A:
                 /* code */
+                vTaskDelay(pdMS_TO_TICKS(5000));
                 break;  
         case STATE3A:
                 /* code */
@@ -89,7 +100,7 @@ void task2(void *pvParameters){
                 state = STATE2B;
             break;
         case STATE2B:
-            
+            vTaskDelay(pdMS_TO_TICKS(5000));
             break;  
         case STATE3B:
  

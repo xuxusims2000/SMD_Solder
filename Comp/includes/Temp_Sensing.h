@@ -6,12 +6,8 @@
 #include "driver/gpio.h"
 
 
-//Signals
-#define TEMP_SENSING_SIGNAL_REQUESTED       0x00000001
-#define TEMP_SENSING_SIGNAL_RELEASED        0x00000002
-#define TEMP_SENSING_SIGNAL_START           0x00000004
-#define TEMP_SENSING_SIGNAL_STOP            0x00000008
-#define TEMP_SENSING_SIGNAL_UPDATE_TEMPERATURE 0x00000010
+
+
 
 
 
@@ -42,4 +38,7 @@ esp_err_t init_spi_bus(void);
 esp_err_t add_max6675_device(spi_device_handle_t *handle);
 float read_max6675(spi_device_handle_t handle);
 
-void Test_temperature_sensing(void);
+//Test function
+
+void Test_temperature_sensing_1(void);
+void Test_temperature_sensing_0(void);

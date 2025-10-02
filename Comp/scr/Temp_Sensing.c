@@ -3,37 +3,68 @@
 #include "Temp_Sensing.h"
 
 
+#define TEMP_SENSING_SIGNAL_REQUESTED   (1 << 0)  // Signal to request temperature sensing
+#define TEMP_SENSING_SIGNAL_RLEASE      (1 << 1)  // Signal to indicate temperature sensing 
+#define TEMP_SENSING_SIGNAL_START       (1 << 2)  // Signal to indicate temperature sensing 
+#define TEMP_SENSING_SIGNAL_STOP        (1 << 3)  // Signal to release temperature sensing
 
 void tempSensing_Requesting(void);
+
+uint32_t tempSensingSignalWait(uint32_t signal, uint32_t timeout);
 
 
 typedef struct {
     TempSensingState state;
-    // Add other members as needed, e.g., timers, callbacks
+    
+    TaskHandle_t taskHandle;
+
 } TempSensing_t;
 
 
+
+
+/* Private variables --------------------------------------------------*/
+
 static TempSensing_t temp_sensing = {
     .state = TEMP_SENSING_UNDEFINED,
-    // Initialize other members as needed
+    
 };
 
 
 
 void Temp_Sensing_Init(void){
 
-    ESP_LOGI("Temp_sensing", "INIT");
    
-    
-    esp_err_t ret = init_spi_bus();
-    spi_device_handle_t max6675;
-    ret = add_max6675_device(&max6675);
+    if (   (temp_sensing.state == TEMP_SENSING_UNDEFINED) 
+        && (temp_sensing.taskHandle == NULL) )
+    {
+        ESP_LOGI("Temp_sensing", "INIT");
+        
+        esp_err_t ret = init_spi_bus();
+        spi_device_handle_t max6675;
+        ret = add_max6675_device(&max6675);
+        if (ret != ESP_OK) {
+            ESP_LOGE("Temp_sensing", "Failed to initialize SPI for MAX6675");
+            return;
+        }
 
-    //NOT SHURE BUT MABY NEED SEMAPHORE OR MUTEX
+        // May need semaphore  
 
-    temp_sensing.state = TEMP_SENSING_POWER_OFF;
+        /* Initialize state */
+        temp_sensing.state = TEMP_SENSING_POWER_OFF;
+
+        // May need mutex
+
+        /* Create and launch Task*/
+        xTaskCreate(Temp_Sensing_Task, 
+                    "Temp_Sensing_Task",
+                    2048, 
+                    NULL, 
+                    1, 
+                    &temp_sensing.taskHandle);
+
+    }
     
-    xTaskCreate(Temp_Sensing_Task, "Temp_Sensing_Task_Task", 2048, NULL, 1, NULL);
 }
 
 void Temp_Sensing_Request(void){
@@ -53,6 +84,7 @@ void Temp_Sensing_Task(void){
      
     while (1) {
                
+                
         switch (temp_sensing.state)
         {
         case TEMP_SENSING_POWER_OFF:
@@ -60,6 +92,7 @@ void Temp_Sensing_Task(void){
             ESP_LOGI("Temp_sensing", "STATE: POWER_OFF");
 
             //SignalWait wait for the request signal
+            tempSensingSignalWait( TEMP_SENSING_SIGNAL_REQUESTED,  portMAX_DELAY);
 
             break;
 
@@ -158,7 +191,18 @@ float read_max6675(spi_device_handle_t handle) {
 }
 
 
-void Test_temperature_sensing(){
+
+/* -------------------- Sensing functions ------------------------*/
+
+
+void tempSensing_Requesting(void)
+{
+
+}
+
+// -------------------- Test functions ------------------------
+
+void Test_temperature_sensing_0(){
 
     //initialize spi
     esp_err_t ret = init_spi_bus();
@@ -180,11 +224,23 @@ void Test_temperature_sensing(){
     }
 }
 
+void Test_temperature_sensing_1(){
 
-/* -------------------- Sensing functions ------------------------*/
+    Temp_Sensing_Init();
+
+    xTaskCreate(Temp_Sensing_Task, "Temp_Sensing_Task_Task", 2048, NULL, 1, NULL);
+
+}
 
 
-void tempSensing_Requesting(void)
+
+uint32_t tempSensingSignalWait(uint32_t signal, uint32_t timeout)
 {
+    uint32_t notifiedValue = 0;
 
+    printf("Waiting for signal %" PRIu32 " with timeout %" PRIu32 " ms\n", signal, timeout);
+
+    xTaskNotifyWait(0x00, signal, &notifiedValue, pdMS_TO_TICKS(timeout));
+
+    return notifiedValue;
 }
