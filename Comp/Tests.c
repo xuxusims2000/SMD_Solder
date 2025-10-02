@@ -31,7 +31,7 @@ void test_function() {
 }
 
 
-void Test_task_manaement_signals(void){
+void Test_task_managment_signals(void){
 
     // Example test code for task management signals
     printf("Starting task management signals test...\n");

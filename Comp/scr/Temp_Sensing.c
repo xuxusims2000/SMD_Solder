@@ -15,9 +15,12 @@ uint32_t tempSensingSignalWait(uint32_t signal, uint32_t timeout);
 
 typedef struct {
     TempSensingState state;
-    
-    TaskHandle_t taskHandle;
 
+    uint32_t signals;  // Bitmask for signals
+
+    TaskHandle_t taskHandle;
+    SemaphoreHandle_t xSemaphoreHandle;
+    // Add other members as needed, e.g., timers, callbacks
 } TempSensing_t;
 
 
@@ -27,7 +30,10 @@ typedef struct {
 
 static TempSensing_t temp_sensing = {
     .state = TEMP_SENSING_UNDEFINED,
-    
+    .signals = 0,
+    .taskHandle= NULL,
+    .xSemaphoreHandle = NULL,
+    // Initialize other members as needed
 };
 
 
@@ -75,7 +81,9 @@ void Temp_Sensing_Request(void){
     //chck if the semaphore is available
     // if yes set the application callbacks 
         //signalsSet (signarl request)
-        temp_sensing.state = TEMP_SENSING_RQUESTING;
+    temp_sensing.state = TEMP_SENSING_RQUESTING;
+    xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_REQUESTED, eSetBits);
+   
 
 }
 
