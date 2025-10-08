@@ -2,7 +2,7 @@
 #include "Test.h"
 
 #include "ILI9341_screen.h"
-#include "Temp_Sensing.h"
+#include "TestTemp_Sensing.h"
 
 TaskHandle_t task1Handle = NULL;
 TaskHandle_t task2Handle = NULL;

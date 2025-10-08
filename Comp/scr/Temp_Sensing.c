@@ -12,7 +12,6 @@ void tempSensing_Requesting(void);
 
 uint32_t tempSensingSignalWait(uint32_t signal, uint32_t timeout);
 
-void Temp_Sensing_Test_Task(void *pvParameters); // Test task function prototype
 
 
 typedef struct {
@@ -87,6 +86,50 @@ void Temp_Sensing_Request(void){
     xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_REQUESTED, eSetBits);
    
 
+}
+
+void Temp_Sensing_Start(void){
+
+
+    if ( temp_sensing.state == TEMP_SENSING_REQUESTED)
+    {
+        xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_START, eSetBits);
+    }
+    else
+    {
+        ESP_LOGE("Temp_Sensing_Start", "Error: Temp_Sensing not in REQUESTED state");
+    }
+
+}
+
+void Temp_Sensing_Stop(void){
+
+    if( temp_sensing.state == TEMP_SENSING_START )
+    {
+         xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_STOP, eSetBits);
+    }
+    else
+    {
+        ESP_LOGE("Temp_Sensing_Stop", "Error: Temp_Sensing not in START state");
+    }
+
+}
+
+void Temp_Sensing_Release(void)
+{
+    /*Gestionar semaforo*/
+
+    if (temp_sensing.state == TEMP_SENSING_REQUESTED)
+    {
+        temp_sensing.state = TEMP_SENSING_RELEASING;
+        xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_RLEASE, eSetBits);
+        ESP_LOGI("Temp_Sensing_Release", "Temperature Sensing Release OK.");
+
+    }
+    else
+    {
+        ESP_LOGE("Temp_Sensing_Release", "Temperature Sensing Release ERROR.");
+    }
 }
 
 void Temp_Sensing_Task(void *pvParameters){
@@ -210,57 +253,6 @@ void tempSensing_Requesting(void)
 
 }
 
-// -------------------- Test functions ------------------------
-
-void Test_temperature_sensing_0(){
-
-    //initialize spi
-    esp_err_t ret = init_spi_bus();
-    spi_device_handle_t max6675;
-    ret = add_max6675_device(&max6675);
-
-    uint16_t new_temperature = 0;
-     
-    while (1) {
-               
-        
-        //read the temperature from the amplifier of the sensro (MAX6675)
-        float current_temperature = read_max6675(max6675); // temperature in Celsius
-        if (current_temperature >= 0) {
-            ESP_LOGI("MAIN", "Temperature: %.2f°C", current_temperature);
-        } else {
-            ESP_LOGE("MAIN", "Failed to read temperature");
-        }
-    }
-}
-
-void Test_temperature_sensing_1(){
-
-    Temp_Sensing_Init();
-
-    /* Create and start 'test task thread'*/
-    xTaskCreate(Temp_Sensing_Test_Task, "Temp_Sensing_Test_Task", 2048, NULL, 1, NULL);
-
-}
-
-void Temp_Sensing_Test_Task(void *pvParameters){
-
-    ESP_LOGE("Temp_Sensing_Test_Task", "--------------Started-----------------");
-    
-    /*callbacs*/
-
-
-    while (1) {
-               
-        // Request temperature sensing
-        Temp_Sensing_Request();
-
-        // Simulate some processing delay
-        vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
-
-        tempSensingSignalWait( TEMP_SENSING_SIGNAL_START,  portMAX_DELAY);
-    }
-}
 
 
 
