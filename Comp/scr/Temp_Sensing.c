@@ -12,6 +12,8 @@ void tempSensing_Requesting(void);
 
 uint32_t tempSensingSignalWait(uint32_t signal, uint32_t timeout);
 
+void Temp_Sensing_Test_Task(void *pvParameters); // Test task function prototype
+
 
 typedef struct {
     TempSensingState state;
@@ -87,7 +89,7 @@ void Temp_Sensing_Request(void){
 
 }
 
-void Temp_Sensing_Task(void){
+void Temp_Sensing_Task(void *pvParameters){
 
      
     while (1) {
@@ -236,8 +238,28 @@ void Test_temperature_sensing_1(){
 
     Temp_Sensing_Init();
 
-    xTaskCreate(Temp_Sensing_Task, "Temp_Sensing_Task_Task", 2048, NULL, 1, NULL);
+    /* Create and start 'test task thread'*/
+    xTaskCreate(Temp_Sensing_Test_Task, "Temp_Sensing_Test_Task", 2048, NULL, 1, NULL);
 
+}
+
+void Temp_Sensing_Test_Task(void *pvParameters){
+
+    ESP_LOGE("Temp_Sensing_Test_Task", "--------------Started-----------------");
+    
+    /*callbacs*/
+
+
+    while (1) {
+               
+        // Request temperature sensing
+        Temp_Sensing_Request();
+
+        // Simulate some processing delay
+        vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
+
+        tempSensingSignalWait( TEMP_SENSING_SIGNAL_START,  portMAX_DELAY);
+    }
 }
 
 

@@ -1,18 +1,19 @@
+// useful.h
 
- #ifndef TESTS_H
- #define TESTS_H
- 
+
+#ifndef USEFUL_H
+#define USEFUL_H
+
+
+#include <stdint.h>
 #include <stdio.h>
 #include <stdint.h>
 #include "esp_log.h" 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_err.h"
-#include "Useful.h"
 
 
-
- // #include "ILI9341_screen.h"
 void test_function(void);
 
 typedef enum { 
@@ -29,7 +30,4 @@ typedef enum {
     STATE4B
 } Test_taskB_manager;
 
-
-
-
-#endif /*TESTS_H*/
+#endif // USEFUL_H

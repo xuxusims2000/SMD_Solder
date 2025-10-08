@@ -5,12 +5,11 @@ idf_component_register(
         "scr/Temp_Ctrl.c"
         "scr/PWM_Config.c"
         "scr/Screen_design.c"
-        "Tests.c"
-        "Useful/Useful.c"
+        "Test/Test.c"
     INCLUDE_DIRS
         "includes"
         "scr"
-        "Useful"
+        "Test"
         "."
     REQUIRES
         lvgl

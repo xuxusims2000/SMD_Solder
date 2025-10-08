@@ -1,7 +1,5 @@
-
-
-//In this file diferent tests can be run just uncoment the one you want to test
-#include "Tests.h"
+// useful.c
+#include "Test.h"
 
 #include "ILI9341_screen.h"
 #include "Temp_Sensing.h"
@@ -29,6 +27,14 @@ void test_function() {
     
     //Test_PID_control_();
 }
+
+
+
+
+
+
+
+/* Test sust to try signals and state diagram */
 
 
 void Test_task_managment_signals(void){

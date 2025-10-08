@@ -30,7 +30,7 @@ typedef enum {
 // Declare functions
 
 void Temp_Sensing_Init(void);
-void Temp_Sensing_Task(void);
+void Temp_Sensing_Task(void *pvParameters);
 
 void Temp_Sensing_Request(void);
 

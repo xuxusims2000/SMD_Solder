@@ -19,7 +19,7 @@
 #include "Temp_Sensing.h"
 #include "PWM_Config.h"
 #include "ILI9341_screen.h"
-#include "Tests.h"
+#include "Test.h"
 
 #include "driver/spi_master.h"
 #include "lvgl.h"
