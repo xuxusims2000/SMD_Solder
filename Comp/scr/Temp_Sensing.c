@@ -20,8 +20,8 @@ typedef struct {
     uint32_t signals;  // Bitmask for signals
 
     TaskHandle_t taskHandle;
-    SemaphoreHandle_t xSemaphoreHandle;
-    // Add other members as needed, e.g., timers, callbacks
+    SemaphoreHandle_t TempSensing_xSemaphoreHandle; //Defines a semaphore to manage the resource
+   
 } TempSensing_t;
 
 
@@ -33,7 +33,7 @@ static TempSensing_t temp_sensing = {
     .state = TEMP_SENSING_UNDEFINED,
     .signals = 0,
     .taskHandle= NULL,
-    .xSemaphoreHandle = NULL,
+    .TempSensing_xSemaphoreHandle = NULL,
     // Initialize other members as needed
 };
 
@@ -47,6 +47,8 @@ void Temp_Sensing_Init(void){
     {
         ESP_LOGI("Temp_sensing", "INIT");
         
+       //Auria de mirar si necesita mutex o semaforo
+       
         esp_err_t ret = init_spi_bus();
         spi_device_handle_t max6675;
         ret = add_max6675_device(&max6675);
@@ -56,6 +58,11 @@ void Temp_Sensing_Init(void){
         }
 
         // May need semaphore  
+        temp_sensing.TempSensing_xSemaphoreHandle = xSemaphoreCreateBinary(); //Ceates a binary semaphore before using it
+        if (temp_sensing.TempSensing_xSemaphoreHandle == NULL) {
+            ESP_LOGE("Temp_sensing", "Failed to create semaphore");
+            return;
+        }
 
         /* Initialize state */
         temp_sensing.state = TEMP_SENSING_POWER_OFF;
@@ -71,25 +78,31 @@ void Temp_Sensing_Init(void){
                     &temp_sensing.taskHandle);
 
     }
-    
 }
 
 void Temp_Sensing_Request(void){
 
     //Resources needed for the module -> timers , submodules , callbaks
-
-    //need of semaphore or mutex
-    //chck if the semaphore is available
-    // if yes set the application callbacks 
-        //signalsSet (signarl request)
-    temp_sensing.state = TEMP_SENSING_RQUESTING;
-    xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_REQUESTED, eSetBits);
    
+    //chck if the semaphore is available
+    
+    
+    if ( xSemaphoreTake(temp_sensing.TempSensing_xSemaphoreHandle, 0) == pdTRUE) //Try to take the semaphore, wait 0 ticks if not available
+    {
+        ESP_LOGI("Task", "Semaphore taken immediately!"); // if yes set the application callbacks
+        //Probably here goes a callback for interruptuions to the application
 
+        //change state
+        temp_sensing.state = TEMP_SENSING_RQUESTING;
+        xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_REQUESTED, eSetBits);
+    } 
+    else
+    {
+        ESP_LOGI("Task", "Semaphore not available");
+    }
 }
 
 void Temp_Sensing_Start(void){
-
 
     if ( temp_sensing.state == TEMP_SENSING_REQUESTED)
     {
@@ -99,7 +112,6 @@ void Temp_Sensing_Start(void){
     {
         ESP_LOGE("Temp_Sensing_Start", "Error: Temp_Sensing not in REQUESTED state");
     }
-
 }
 
 void Temp_Sensing_Stop(void){
@@ -118,17 +130,23 @@ void Temp_Sensing_Stop(void){
 void Temp_Sensing_Release(void)
 {
     /*Gestionar semaforo*/
-
-    if (temp_sensing.state == TEMP_SENSING_REQUESTED)
+    if ( xSemaphoreGive(temp_sensing.TempSensing_xSemaphoreHandle) != pdTRUE)
     {
-        temp_sensing.state = TEMP_SENSING_RELEASING;
-        xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_RLEASE, eSetBits);
-        ESP_LOGI("Temp_Sensing_Release", "Temperature Sensing Release OK.");
+        if (temp_sensing.state == TEMP_SENSING_REQUESTED)
+        {
+            temp_sensing.state = TEMP_SENSING_RELEASING;
+            xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_RLEASE, eSetBits);
+            ESP_LOGI("Temp_Sensing_Release", "Temperature Sensing Release OK.");
 
+        }
+        else
+        {
+            ESP_LOGE("Temp_Sensing_Release", "Temperature Sensing Release ERROR.");
+        }
     }
     else
     {
-        ESP_LOGE("Temp_Sensing_Release", "Temperature Sensing Release ERROR.");
+        ESP_LOGE("Temp_Sensing_Release", "Error: Semaphore not released");
     }
 }
 
@@ -155,6 +173,8 @@ void Temp_Sensing_Task(void *pvParameters){
 
             tempSensing_Requesting();
 
+            //Xec if requesting end up well if not shold release semaphore
+            //xSemaphoreGive(Flowmeter_binarySemaphore);
 
             break;
 
