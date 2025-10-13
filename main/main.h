@@ -28,7 +28,7 @@ void Manager_SMD_Requesting(void);
 
 void Manager_SMD_Task(void );
 
-void Manager_SMD_Starting(void);
+esp_err_t Manager_SMD_Starting(void);
 
 typedef enum {
     POWER_OFF,

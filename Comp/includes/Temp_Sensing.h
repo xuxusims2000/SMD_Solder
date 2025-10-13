@@ -17,8 +17,8 @@ typedef enum {
     TEMP_SENSING_POWER_OFF, 
     TEMP_SENSING_RQUESTING,
     TEMP_SENSING_REQUESTED,
-    TEMP_SENSING_RELEASING,
-    TEMP_SENSING_START
+    TEMP_SENSING_START,
+    TEMP_SENSING_RELEASING
 } TempSensingState;
 
 
@@ -27,7 +27,7 @@ typedef enum {
 
 void Temp_Sensing_Task(void *pvParameters);
 void Temp_Sensing_Init(void);
-void Temp_Sensing_Start(void);
+esp_err_t Temp_Sensing_Start(void);
 void Temp_Sensing_Stop(void);
 void Temp_Sensing_Release(void);
 

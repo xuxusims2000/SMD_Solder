@@ -8,11 +8,11 @@
 #define TEMP_SENSING_SIGNAL_START       (1 << 2)  // Signal to indicate temperature sensing 
 #define TEMP_SENSING_SIGNAL_STOP        (1 << 3)  // Signal to release temperature sensing
 
-void tempSensing_Requesting(void);
+esp_err_t tempSensing_Requesting(void);
 
 uint32_t tempSensingSignalWait(uint32_t signal, uint32_t timeout);
 
-
+esp_err_t tempSensing_Releasing(void);
 
 typedef struct {
     TempSensingState state;
@@ -102,16 +102,20 @@ void Temp_Sensing_Request(void){
     }
 }
 
-void Temp_Sensing_Start(void){
+esp_err_t Temp_Sensing_Start(void){
+
+    esp_err_t result = ESP_FAIL;
 
     if ( temp_sensing.state == TEMP_SENSING_REQUESTED)
     {
         xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_START, eSetBits);
+        result = ESP_OK;
     }
     else
     {
         ESP_LOGE("Temp_Sensing_Start", "Error: Temp_Sensing not in REQUESTED state");
     }
+    return result;
 }
 
 void Temp_Sensing_Stop(void){
@@ -152,7 +156,9 @@ void Temp_Sensing_Release(void)
 
 void Temp_Sensing_Task(void *pvParameters){
 
-     
+     esp_err_t result = ESP_FAIL;
+     uint32_t signal = 0;
+
     while (1) {
                
                 
@@ -171,23 +177,72 @@ void Temp_Sensing_Task(void *pvParameters){
         
             ESP_LOGI("Temp_sensing", "STATE: REQUESTING");
 
-            tempSensing_Requesting();
-
-            //Xec if requesting end up well if not shold release semaphore
-            //xSemaphoreGive(Flowmeter_binarySemaphore);
-
+            result = tempSensing_Requesting();
+            if ( result == ESP_OK)
+            {
+                temp_sensing.state = TEMP_SENSING_REQUESTED;
+                ESP_LOGI("Temp_sensing", "STATE: REQUESTED");
+            }
+            else
+            {
+                ESP_LOGE("Temp_sensing", "REQUESTING ERROR -> RELEASING");
+                xSemaphoreGive(temp_sensing.TempSensing_xSemaphoreHandle);
+                temp_sensing.state = TEMP_SENSING_RELEASING;
+                
+            }
             break;
 
         case TEMP_SENSING_REQUESTED:
-        /* code */
+            ESP_LOGE("Temp_sensing", "STATE: REQUESTED");
+            //Wait for start or release signal
+            {
+                signal = tempSensingSignalWait( TEMP_SENSING_SIGNAL_START | TEMP_SENSING_SIGNAL_RLEASE,  portMAX_DELAY);
+                
+                if (signal & TEMP_SENSING_SIGNAL_START)
+                {
+                    temp_sensing.state = TEMP_SENSING_START;
+                    ESP_LOGI("Temp_sensing", "STATE: START");
+                }
+                else if (signal & TEMP_SENSING_SIGNAL_RLEASE)
+                {
+                    temp_sensing.state = TEMP_SENSING_RELEASING;
+                    ESP_LOGI("Temp_sensing", "STATE: RELEASING");
+                }
+            }  
+
+            break;
+
+        case TEMP_SENSING_START:
+            
+            signal = tempSensingSignalWait( TEMP_SENSING_SIGNAL_STOP ,  portMAX_DELAY);
+            
+            if (signal & TEMP_SENSING_SIGNAL_STOP)
+            {
+                temp_sensing.state = TEMP_SENSING_REQUESTED;
+                ESP_LOGI("Temp_sensing", "STATE: REQUESTED");
+            }
+           
+
             break;
 
         case TEMP_SENSING_RELEASING:
-            /* code */
-            break;
+            
+            ESP_LOGI("Temp_sensing", "STATE: RELEASING");
 
-        
+            result = tempSensing_Releasing();
+            if ( result == ESP_OK)
+            {
+                temp_sensing.state = TEMP_SENSING_POWER_OFF;
+                ESP_LOGI("Temp_sensing", "STATE: POWER_OFF");
+            }
+            else
+            {
+                ESP_LOGE("Temp_sensing", "RELEASING ERROR -> POWER_OFF");
+                temp_sensing.state = TEMP_SENSING_POWER_OFF;   
+            }
+            break;
         default:
+            ESP_LOGE("Temp_sensing", "STATE: UNDEFINED");
             break;
         } 
 
@@ -268,9 +323,14 @@ float read_max6675(spi_device_handle_t handle) {
 /* -------------------- Sensing functions ------------------------*/
 
 
-void tempSensing_Requesting(void)
+esp_err_t tempSensing_Requesting(void)
 {
+    esp_err_t result = ESP_FAIL;
 
+    
+    result = ESP_OK;
+
+    return result;
 }
 
 

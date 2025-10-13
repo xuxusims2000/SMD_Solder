@@ -20,6 +20,8 @@ void app_main(void)
   test_function();
 
   #else
+    esp_err_t result = ESP_FAIL;
+
     esp_log_level_set("MAIN", ESP_LOG_INFO); // Set log level for MAIN tag
     ESP_LOGI("MAIN", "Starting Manager_SMD Task");
 
@@ -130,24 +132,33 @@ void Manager_SMD_Task(){
 
 }
 
+esp_err_t Manager_SMD_Starting(){
 
+    esp_err_t result = ESP_FAIL;
 
+    // Start  resources needed for the modules 
 
-void Manager_SMD_Starting(){
-
-    // Start or initialize resources needed for the module
-
-    if (mainSolder.Manager_SMD_UpdateTemperature_Timer != NULL) {
-        if (xTimerStart(mainSolder.Manager_SMD_UpdateTemperature_Timer, 0) != pdPASS) {
-            ESP_LOGE("TIMER", "Failed to start Manager_SMD_UpdateTemperature_Timer");
-        } else {
-            ESP_LOGI("TIMER", "Manager_SMD_UpdateTemperature_Timer started successfully");
+   
+    
+    /* -----------Start Temperature Sensing-------------*/ 
+    //if ( result == ESP_OK )      
+    //{
+       result = Temp_Sensing_Start();
+        if ( result == ESP_OK)
+        {
+            ESP_LOGI("Temp_Sensing", "Temperature Sensing Started Successfully");
+            result = ESP_OK;
+            vTaskDelay(pdMS_TO_TICKS(10));  
         }
-    } else {
-        ESP_LOGE("TIMER", "Manager_SMD_UpdateTemperature_Timer is NULL");
-    }
+        else
+         {
+            ESP_LOGE("Temp_Sensing", "Failed to Start Temperature Sensing");
+            vTaskDelay(pdMS_TO_TICKS(10));  
+         }
+    //}  
+   // mainSolder.state = REQUESTED; // Transition to the next state
 
-    mainSolder.state = REQUESTED; // Transition to the next state
+    return result;
 }
 
 /*------------------Callbaks--------------------*/
