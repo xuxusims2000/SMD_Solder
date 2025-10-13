@@ -43,6 +43,7 @@ void Test_temperature_sensing_0(){
 
 void Test_temperature_sensing_1(){
 
+    ESP_LOGI("TEST", "Test_temperature_sensing_1 started"); 
     Temp_Sensing_Init();
 
     /* Create and start 'test task thread'*/
@@ -52,7 +53,7 @@ void Test_temperature_sensing_1(){
 
 void Temp_Sensing_Test_Task(void *pvParameters){
 
-    ESP_LOGE("Temp_Sensing_Test_Task", "--------------Started-----------------");
+    ESP_LOGI("Temp_Sensing_Test_Task", "--------------Started-----------------");
     
     /*callbacs*/
 

@@ -64,6 +64,9 @@ void Temp_Sensing_Init(void){
             return;
         }
 
+        xSemaphoreGive(temp_sensing.TempSensing_xSemaphoreHandle); //Initialy the semaphore is available
+        
+
         /* Initialize state */
         temp_sensing.state = TEMP_SENSING_POWER_OFF;
 
@@ -82,12 +85,17 @@ void Temp_Sensing_Init(void){
 
 void Temp_Sensing_Request(void){
 
+    BaseType_t xResult ;
+    
     //Resources needed for the module -> timers , submodules , callbaks
    
     //chck if the semaphore is available
     
+   
     
-    if ( xSemaphoreTake(temp_sensing.TempSensing_xSemaphoreHandle, 0) == pdTRUE) //Try to take the semaphore, wait 0 ticks if not available
+    xResult =  xSemaphoreTake(temp_sensing.TempSensing_xSemaphoreHandle, 0);
+    ESP_LOGI("Task", "Try to request temperature: %d",xResult);
+    if ( xResult == pdTRUE) //Try to take the semaphore, wait 0 ticks if not available
     {
         ESP_LOGI("Task", "Semaphore taken immediately!"); // if yes set the application callbacks
         //Probably here goes a callback for interruptuions to the application
@@ -98,7 +106,7 @@ void Temp_Sensing_Request(void){
     } 
     else
     {
-        ESP_LOGI("Task", "Semaphore not available");
+        ESP_LOGE("Task", "Semaphore not available");
     }
 }
 
@@ -331,6 +339,14 @@ esp_err_t tempSensing_Requesting(void)
     result = ESP_OK;
 
     return result;
+}
+
+esp_err_t tempSensing_Releasing(void)
+{
+    esp_err_t result = ESP_FAIL;
+    /*STOP and DELEATE timers*/
+    /* Release resourses used like gpio spi uart etc*/
+    return result ;
 }
 
 

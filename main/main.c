@@ -16,9 +16,10 @@ Manager_SMD mainSolder = {
 void app_main(void)
 {
 
-  #ifdef TEST 
+  #ifdef TEST
+  ESP_LOGI("TEST", "TEST MODE"); 
   test_function();
-
+    
   #else
     esp_err_t result = ESP_FAIL;
 
