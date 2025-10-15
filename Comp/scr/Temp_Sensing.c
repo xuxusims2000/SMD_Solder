@@ -15,13 +15,15 @@ uint32_t tempSensingSignalWait(uint32_t signal, uint32_t timeout);
 esp_err_t tempSensing_Releasing(void);
 
 typedef struct {
-    TempSensingState state;
+    TempSensingState        state;
 
-    uint32_t signals;  // Bitmask for signals
+    uint32_t                signals;  // Bitmask for signals
 
-    TaskHandle_t taskHandle;
-    SemaphoreHandle_t TempSensing_xSemaphoreHandle; //Defines a semaphore to manage the resource
-   
+    TaskHandle_t            taskHandle;
+    SemaphoreHandle_t       TempSensing_xSemaphoreHandle; //Defines a semaphore to manage the resource
+    
+    float                temperature;
+
 } TempSensing_t;
 
 
@@ -65,7 +67,7 @@ void Temp_Sensing_Init(void){
         }
 
         xSemaphoreGive(temp_sensing.TempSensing_xSemaphoreHandle); //Initialy the semaphore is available
-        
+
 
         /* Initialize state */
         temp_sensing.state = TEMP_SENSING_POWER_OFF;
@@ -90,8 +92,6 @@ void Temp_Sensing_Request(void){
     //Resources needed for the module -> timers , submodules , callbaks
    
     //chck if the semaphore is available
-    
-   
     
     xResult =  xSemaphoreTake(temp_sensing.TempSensing_xSemaphoreHandle, 0);
     ESP_LOGI("Task", "Try to request temperature: %d",xResult);
@@ -161,6 +161,16 @@ void Temp_Sensing_Release(void)
         ESP_LOGE("Temp_Sensing_Release", "Error: Semaphore not released");
     }
 }
+
+
+float TempSensing_GetTemperature(spi_device_handle_t handle)
+{
+    temp_sensing.temperature = read_max6675(handle); // Replace NULL with actual device handle if needed
+
+
+    return temp_sensing.temperature; // Replace with actual temperature reading logic
+}
+
 
 void Temp_Sensing_Task(void *pvParameters){
 
