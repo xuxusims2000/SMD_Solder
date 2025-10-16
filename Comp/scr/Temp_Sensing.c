@@ -85,8 +85,9 @@ void Temp_Sensing_Init(void){
     }
 }
 
-void Temp_Sensing_Request(void){
+esp_err_t Temp_Sensing_Request(TempSensing_Configuration_t* config){
 
+    esp_err_t result = ESP_FAIL;
     BaseType_t xResult ;
     
     //Resources needed for the module -> timers , submodules , callbaks
@@ -94,11 +95,13 @@ void Temp_Sensing_Request(void){
     //chck if the semaphore is available
     
     xResult =  xSemaphoreTake(temp_sensing.TempSensing_xSemaphoreHandle, 0);
-    ESP_LOGI("TasTemp_Sensing_Requestk", "Try to request temperature: %d",xResult);
+    ESP_LOGI("TasTemp_Sensing_Request", "Try to request temperature: %d",xResult);
     if ( xResult == pdTRUE) //Try to take the semaphore, wait 0 ticks if not available
     {
         ESP_LOGI("Temp_Sensing_Request", "Semaphore taken immediately!"); // if yes set the application callbacks
         //Probably here goes a callback for interruptuions to the application
+
+        //memcpy(&temp_sensing.config, config, sizeof(TempSensing_Configuration_t));
 
         //change state
         temp_sensing.state = TEMP_SENSING_RQUESTING;
@@ -108,6 +111,8 @@ void Temp_Sensing_Request(void){
     {
         ESP_LOGE("Temp_Sensing_Request", "Semaphore not available");
     }
+
+   return result = ESP_OK;
 }
 
 esp_err_t Temp_Sensing_Start(void){

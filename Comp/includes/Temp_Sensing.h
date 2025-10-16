@@ -49,7 +49,7 @@ typedef struct TempSensing_Configuration_e {
 void Temp_Sensing_Task(void *pvParameters);
 
 void Temp_Sensing_Init(void);
-void Temp_Sensing_Request(void);
+esp_err_t Temp_Sensing_Request(TempSensing_Configuration_t* config);
 esp_err_t Temp_Sensing_Start(void);
 void Temp_Sensing_Stop(void);
 void Temp_Sensing_Release(void);

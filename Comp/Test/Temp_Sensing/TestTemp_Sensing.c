@@ -12,17 +12,18 @@
 
 typedef struct TestTempSensing_e
 {
-
+    TaskHandle_t            taskHandle;
     TempSensing_Configuration_t   config;
     /* data */
 }TestTempSensing_t;
 
-
+TestTempSensing_t testTempSensing ;
 
 void Temp_Sensing_Test_Task(void *pvParameters); // Test task function prototype
 
 uint32_t TestTemp_Sensing_SignalWait(uint32_t signal, uint32_t timeout);
 
+void TestTempSensing_OperationCompleteCallback(TempSensing_Result_t result);
 
 // -------------------- Test functions ------------------------
 
@@ -54,7 +55,7 @@ void Test_temperature_sensing_1(){
     Temp_Sensing_Init();
 
     /* Create and start 'test task thread'*/
-    xTaskCreate(Temp_Sensing_Test_Task, "Temp_Sensing_Test_Task", 2048, NULL, 1, NULL);
+    xTaskCreate(Temp_Sensing_Test_Task, "Temp_Sensing_Test_Task", 2048, NULL, 1, &testTempSensing.taskHandle);
 
 }
 
@@ -63,13 +64,14 @@ void Temp_Sensing_Test_Task(void *pvParameters){
     ESP_LOGI("Temp_Sensing_Test_Task", "--------------Started-----------------");
     
     /*callbacs*/
-
+        
+        testTempSensing.config.callbacks.OperationCompleteCallback = TestTempSensing_OperationCompleteCallback; 
 
 
     for(uint8_t i=0; i<2; i++){
                
         // Request temperature sensing
-        Temp_Sensing_Request();
+        Temp_Sensing_Request(&testTempSensing.config);
         vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
 
         TestTemp_Sensing_SignalWait( TEST_TEMP_SENSING_SIGNAL_REQUEST_COMPLETE,  portMAX_DELAY);
@@ -113,6 +115,31 @@ uint32_t TestTemp_Sensing_SignalWait(uint32_t signal, uint32_t timeout)
     xTaskNotifyWait(0x00, signal, &notifiedValue, pdMS_TO_TICKS(timeout));
 
     return notifiedValue;
+}
+
+
+/*------------------Callbacks-------------------------*/
+
+void TestTempSensing_OperationCompleteCallback(TempSensing_Result_t result)
+{
+    switch (result)
+    {
+    case TEMP_SENSING_RESULT_REQUEST:
+        xTaskNotifyGiveIndexed(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_REQUEST_COMPLETE);
+        break;
+    case TEMP_SENSING_RESULT_START:
+        xTaskNotifyGiveIndexed(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_START_COMPLETE);
+        break;
+    case TEMP_SENSING_RESULT_STOP:
+        xTaskNotifyGiveIndexed(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_STOP_COMPLETE);
+        break;
+    case TEMP_SENSING_RESULT_RELEASE:
+        xTaskNotifyGiveIndexed(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_RELEASE_COMPLETE);
+        break;
+    default:
+        // Handle undefined result
+        break;
+    }
 }
 
 
