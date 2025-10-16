@@ -4,11 +4,18 @@
 
 #include "TestTemp_Sensing.h"
 
+
 #define TEST_TEMP_SENSING_SIGNAL_REQUEST_COMPLETE       (1 << 0)  // Signal to request temperature sensing
 #define TEST_TEMP_SENSING_SIGNAL_START_COMPLETE         (1 << 1)  // Signal to indicate temperature sensing 
 #define TEST_TEMP_SENSING_SIGNAL_RELEASE_COMPLETE       (1 << 2)  // Signal to indicate temperature sensing 
 #define TEST_TEMP_SENSING_SIGNAL_STOP_COMPLETE          (1 << 3)  // Signal to release temperature sensing
 
+typedef struct TestTempSensing_e
+{
+
+    TempSensing_Configuration_t   config;
+    /* data */
+}TestTempSensing_t;
 
 
 
@@ -58,6 +65,7 @@ void Temp_Sensing_Test_Task(void *pvParameters){
     /*callbacs*/
 
 
+
     for(uint8_t i=0; i<2; i++){
                
         // Request temperature sensing
@@ -66,7 +74,7 @@ void Temp_Sensing_Test_Task(void *pvParameters){
 
         TestTemp_Sensing_SignalWait( TEST_TEMP_SENSING_SIGNAL_REQUEST_COMPLETE,  portMAX_DELAY);
 
-        ESP_LOGE("Temp_Sensing_Test_Task", "Request OK");
+        ESP_LOGE(" Temp_Sensing_Test_Task", "Request OK");
 
         Temp_Sensing_Start();
         vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds

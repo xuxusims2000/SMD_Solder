@@ -94,10 +94,10 @@ void Temp_Sensing_Request(void){
     //chck if the semaphore is available
     
     xResult =  xSemaphoreTake(temp_sensing.TempSensing_xSemaphoreHandle, 0);
-    ESP_LOGI("Task", "Try to request temperature: %d",xResult);
+    ESP_LOGI("TasTemp_Sensing_Requestk", "Try to request temperature: %d",xResult);
     if ( xResult == pdTRUE) //Try to take the semaphore, wait 0 ticks if not available
     {
-        ESP_LOGI("Task", "Semaphore taken immediately!"); // if yes set the application callbacks
+        ESP_LOGI("Temp_Sensing_Request", "Semaphore taken immediately!"); // if yes set the application callbacks
         //Probably here goes a callback for interruptuions to the application
 
         //change state
@@ -106,7 +106,7 @@ void Temp_Sensing_Request(void){
     } 
     else
     {
-        ESP_LOGE("Task", "Semaphore not available");
+        ESP_LOGE("Temp_Sensing_Request", "Semaphore not available");
     }
 }
 
@@ -184,7 +184,7 @@ void Temp_Sensing_Task(void *pvParameters){
         {
         case TEMP_SENSING_POWER_OFF:
             
-            ESP_LOGI("Temp_sensing", "STATE: POWER_OFF");
+            ESP_LOGI("Temp_Sensing_Task", "STATE: POWER_OFF");
 
             //SignalWait wait for the request signal
             tempSensingSignalWait( TEMP_SENSING_SIGNAL_REQUESTED,  portMAX_DELAY);
@@ -193,17 +193,17 @@ void Temp_Sensing_Task(void *pvParameters){
 
         case TEMP_SENSING_RQUESTING:
         
-            ESP_LOGI("Temp_sensing", "STATE: REQUESTING");
+            ESP_LOGI("Temp_Sensing_Task", "STATE: REQUESTING");
 
             result = tempSensing_Requesting();
             if ( result == ESP_OK)
             {
                 temp_sensing.state = TEMP_SENSING_REQUESTED;
-                ESP_LOGI("Temp_sensing", "STATE: REQUESTED");
+                ESP_LOGI("Temp_Sensing_Task", "REQUESTED");
             }
             else
             {
-                ESP_LOGE("Temp_sensing", "REQUESTING ERROR -> RELEASING");
+                ESP_LOGE("Temp_Sensing_Task", "REQUESTING ERROR -> RELEASING");
                 xSemaphoreGive(temp_sensing.TempSensing_xSemaphoreHandle);
                 temp_sensing.state = TEMP_SENSING_RELEASING;
                 
@@ -211,7 +211,7 @@ void Temp_Sensing_Task(void *pvParameters){
             break;
 
         case TEMP_SENSING_REQUESTED:
-            ESP_LOGE("Temp_sensing", "STATE: REQUESTED");
+            ESP_LOGI("Temp_Sensing_Task", "STATE: REQUESTED");
             //Wait for start or release signal
             {
                 signal = tempSensingSignalWait( TEMP_SENSING_SIGNAL_START | TEMP_SENSING_SIGNAL_RLEASE,  portMAX_DELAY);
@@ -219,12 +219,12 @@ void Temp_Sensing_Task(void *pvParameters){
                 if (signal & TEMP_SENSING_SIGNAL_START)
                 {
                     temp_sensing.state = TEMP_SENSING_START;
-                    ESP_LOGI("Temp_sensing", "STATE: START");
+                    ESP_LOGI("Temp_Sensing_Task", "STATE: START");
                 }
                 else if (signal & TEMP_SENSING_SIGNAL_RLEASE)
                 {
                     temp_sensing.state = TEMP_SENSING_RELEASING;
-                    ESP_LOGI("Temp_sensing", "STATE: RELEASING");
+                    ESP_LOGI("Temp_Sensing_Task", "STATE: RELEASING");
                 }
             }  
 
@@ -237,7 +237,7 @@ void Temp_Sensing_Task(void *pvParameters){
             if (signal & TEMP_SENSING_SIGNAL_STOP)
             {
                 temp_sensing.state = TEMP_SENSING_REQUESTED;
-                ESP_LOGI("Temp_sensing", "STATE: REQUESTED");
+                ESP_LOGI("Temp_Sensing_Task", "STATE: REQUESTED");
             }
            
 
@@ -245,22 +245,22 @@ void Temp_Sensing_Task(void *pvParameters){
 
         case TEMP_SENSING_RELEASING:
             
-            ESP_LOGI("Temp_sensing", "STATE: RELEASING");
+            ESP_LOGI("Temp_Sensing_Task", "STATE: RELEASING");
 
             result = tempSensing_Releasing();
             if ( result == ESP_OK)
             {
                 temp_sensing.state = TEMP_SENSING_POWER_OFF;
-                ESP_LOGI("Temp_sensing", "STATE: POWER_OFF");
+                ESP_LOGI("Temp_Sensing_Task", "STATE: POWER_OFF");
             }
             else
             {
-                ESP_LOGE("Temp_sensing", "RELEASING ERROR -> POWER_OFF");
+                ESP_LOGE("Temp_Sensing_Task", "RELEASING ERROR -> POWER_OFF");
                 temp_sensing.state = TEMP_SENSING_POWER_OFF;   
             }
             break;
         default:
-            ESP_LOGE("Temp_sensing", "STATE: UNDEFINED");
+            ESP_LOGE("Temp_Sensing_Task", "STATE: UNDEFINED");
             break;
         } 
 

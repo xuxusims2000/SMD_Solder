@@ -147,13 +147,13 @@ esp_err_t Manager_SMD_Starting(){
        result = Temp_Sensing_Start();
         if ( result == ESP_OK)
         {
-            ESP_LOGI("Temp_Sensing", "Temperature Sensing Started Successfully");
+            ESP_LOGI("Manager_SMD_Starting", "Temperature Sensing Started Successfully");
             result = ESP_OK;
             vTaskDelay(pdMS_TO_TICKS(10));  
         }
         else
          {
-            ESP_LOGE("Temp_Sensing", "Failed to Start Temperature Sensing");
+            ESP_LOGE("Manager_SMD_Starting", "Failed to Start Temperature Sensing");
             vTaskDelay(pdMS_TO_TICKS(10));  
          }
     //}  

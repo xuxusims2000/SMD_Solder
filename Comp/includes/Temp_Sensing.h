@@ -1,4 +1,6 @@
 
+#ifndef TEMP_SENSING_H_
+#define TEMP_SENSING_H_
 
 #include "driver/spi_master.h"
 #include "esp_err.h"          // Include for error handling
@@ -21,6 +23,25 @@ typedef enum {
     TEMP_SENSING_RELEASING
 } TempSensingState;
 
+typedef enum TempSensing_Result_e {
+    TEMP_SENSING_RESULT_UNDEFINED ,
+    TEMP_SENSING_RESULT_REQUEST,
+    TEMP_SENSING_RESULT_START,
+    TEMP_SENSING_RESULT_STOP,
+    TEMP_SENSING_RESULT_RELEASE,
+    TEMP_SENSING_RESULT_OPERATION_OK
+} TempSensing_Result_t;
+
+typedef struct TempSensing_Callbacks_e {
+    void (*OperationCompleteCallback)(TempSensing_Result_t result);
+
+} TempSensing_Callbacks_t;
+
+typedef struct TempSensing_Configuration_e {
+   TempSensing_Callbacks_t   callbacks;
+
+} TempSensing_Configuration_t;
+
 
 
 // Declare functions
@@ -42,3 +63,4 @@ float read_max6675(spi_device_handle_t handle);
 
 float TempSensing_GetTemperature(spi_device_handle_t handle);
 
+#endif /* TEMP_SENSING_H_ */
