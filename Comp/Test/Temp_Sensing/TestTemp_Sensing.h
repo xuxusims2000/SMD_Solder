@@ -25,6 +25,10 @@ void Test_temperature_sensing_0(void);
 void Test_temperature_sensing_1(void);
 
 
+/* Request , start ,Geting temperature*/
+void Test_temperature_sensing_2(void);
+
+
 
 
 #endif // TESTTEMP_SENSING_H
