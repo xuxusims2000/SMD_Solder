@@ -15,14 +15,16 @@ uint32_t tempSensingSignalWait(uint32_t signal, uint32_t timeout);
 esp_err_t tempSensing_Releasing(void);
 
 typedef struct {
-    TempSensingState        state;
+    TempSensingState                state;
 
-    uint32_t                signals;  // Bitmask for signals
+    TempSensing_Configuration_t     config;
 
-    TaskHandle_t            taskHandle;
-    SemaphoreHandle_t       TempSensing_xSemaphoreHandle; //Defines a semaphore to manage the resource
+    uint32_t                        signals;  // Bitmask for signals
+
+    TaskHandle_t                    taskHandle;
+    SemaphoreHandle_t               TempSensing_xSemaphoreHandle; //Defines a semaphore to manage the resource
     
-    float                temperature;
+    float                           temperature;
 
 } TempSensing_t;
 
@@ -101,7 +103,7 @@ esp_err_t Temp_Sensing_Request(TempSensing_Configuration_t* config){
         ESP_LOGI("Temp_Sensing_Request", "Semaphore taken immediately!"); // if yes set the application callbacks
         //Probably here goes a callback for interruptuions to the application
 
-        //memcpy(&temp_sensing.config, config, sizeof(TempSensing_Configuration_t));
+        memcpy(&temp_sensing.config, config, sizeof(TempSensing_Configuration_t));
 
         //change state
         temp_sensing.state = TEMP_SENSING_RQUESTING;
@@ -205,6 +207,11 @@ void Temp_Sensing_Task(void *pvParameters){
             {
                 temp_sensing.state = TEMP_SENSING_REQUESTED;
                 ESP_LOGI("Temp_Sensing_Task", "REQUESTED");
+                if (temp_sensing.config.callbacks.OperationCompleteCallback != NULL)
+                {
+                    temp_sensing.config.callbacks.OperationCompleteCallback(TEMP_SENSING_RESULT_REQUEST);
+                }
+
             }
             else
             {
@@ -225,6 +232,10 @@ void Temp_Sensing_Task(void *pvParameters){
                 {
                     temp_sensing.state = TEMP_SENSING_START;
                     ESP_LOGI("Temp_Sensing_Task", "STATE: START");
+                    if (temp_sensing.config.callbacks.OperationCompleteCallback != NULL)
+                        {
+                          temp_sensing.config.callbacks.OperationCompleteCallback(TEMP_SENSING_RESULT_START);
+                        }
                 }
                 else if (signal & TEMP_SENSING_SIGNAL_RLEASE)
                 {
@@ -243,9 +254,12 @@ void Temp_Sensing_Task(void *pvParameters){
             {
                 temp_sensing.state = TEMP_SENSING_REQUESTED;
                 ESP_LOGI("Temp_Sensing_Task", "STATE: REQUESTED");
+                if (temp_sensing.config.callbacks.OperationCompleteCallback != NULL)
+                {
+                    temp_sensing.config.callbacks.OperationCompleteCallback(TEMP_SENSING_RESULT_STOP);
+                }
             }
            
-
             break;
 
         case TEMP_SENSING_RELEASING:

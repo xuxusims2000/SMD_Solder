@@ -125,16 +125,16 @@ void TestTempSensing_OperationCompleteCallback(TempSensing_Result_t result)
     switch (result)
     {
     case TEMP_SENSING_RESULT_REQUEST:
-        xTaskNotifyGiveIndexed(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_REQUEST_COMPLETE);
+        xTaskNotify(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_REQUEST_COMPLETE, eSetBits);
         break;
     case TEMP_SENSING_RESULT_START:
-        xTaskNotifyGiveIndexed(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_START_COMPLETE);
+        xTaskNotify(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_START_COMPLETE, eSetBits);
         break;
     case TEMP_SENSING_RESULT_STOP:
-        xTaskNotifyGiveIndexed(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_STOP_COMPLETE);
+        xTaskNotify(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_STOP_COMPLETE, eSetBits);
         break;
     case TEMP_SENSING_RESULT_RELEASE:
-        xTaskNotifyGiveIndexed(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_RELEASE_COMPLETE);
+        xTaskNotify(testTempSensing.taskHandle, TEST_TEMP_SENSING_SIGNAL_RELEASE_COMPLETE, eSetBits);
         break;
     default:
         // Handle undefined result

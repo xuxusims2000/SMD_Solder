@@ -6,6 +6,7 @@
 #include "esp_err.h"          // Include for error handling
 #include "esp_log.h" 
 #include "driver/gpio.h"
+#include <string.h>
 
 
 
