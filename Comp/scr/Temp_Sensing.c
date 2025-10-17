@@ -24,6 +24,8 @@ typedef struct {
     TaskHandle_t                    taskHandle;
     SemaphoreHandle_t               TempSensing_xSemaphoreHandle; //Defines a semaphore to manage the resource
     
+    spi_device_handle_t             SPI_max6675;
+
     float                           temperature;
 
 } TempSensing_t;
@@ -54,8 +56,8 @@ void Temp_Sensing_Init(void){
        //Auria de mirar si necesita mutex o semaforo
        
         esp_err_t ret = init_spi_bus();
-        spi_device_handle_t max6675;
-        ret = add_max6675_device(&max6675);
+        
+       
         if (ret != ESP_OK) {
             ESP_LOGE("Temp_sensing", "Failed to initialize SPI for MAX6675");
             return;
@@ -79,7 +81,7 @@ void Temp_Sensing_Init(void){
         /* Create and launch Task*/
         xTaskCreate(Temp_Sensing_Task, 
                     "Temp_Sensing_Task",
-                    2048, 
+                    4096, 
                     NULL, 
                     1, 
                     &temp_sensing.taskHandle);
@@ -93,11 +95,15 @@ esp_err_t Temp_Sensing_Request(TempSensing_Configuration_t* config){
     BaseType_t xResult ;
     
     //Resources needed for the module -> timers , submodules , callbaks
-   
+    result = add_max6675_device(&temp_sensing.SPI_max6675);
+    if (result != ESP_OK) {
+        ESP_LOGE("Temp_Sensing_Request", "Failed to add MAX6675 device");
+        return result;
+    }
     //chck if the semaphore is available
     
     xResult =  xSemaphoreTake(temp_sensing.TempSensing_xSemaphoreHandle, 0);
-    ESP_LOGI("TasTemp_Sensing_Request", "Try to request temperature: %d",xResult);
+    //ESP_LOGI("TasTemp_Sensing_Request", "Try to request temperature: %d",xResult);
     if ( xResult == pdTRUE) //Try to take the semaphore, wait 0 ticks if not available
     {
         ESP_LOGI("Temp_Sensing_Request", "Semaphore taken immediately!"); // if yes set the application callbacks
@@ -148,15 +154,18 @@ void Temp_Sensing_Stop(void){
 
 void Temp_Sensing_Release(void)
 {
-    /*Gestionar semaforo*/
-    if ( xSemaphoreGive(temp_sensing.TempSensing_xSemaphoreHandle) != pdTRUE)
+    
+    esp_err_t result = ESP_FAIL;
+    result = xSemaphoreGive(temp_sensing.TempSensing_xSemaphoreHandle);
+    //ESP_LOGI("Temp_Sensing_Release", "Releasing temperature sensing: %d",result);
+    
+    if ( result == pdTRUE)
     {
         if (temp_sensing.state == TEMP_SENSING_REQUESTED)
         {
             temp_sensing.state = TEMP_SENSING_RELEASING;
             xTaskNotify(temp_sensing.taskHandle, TEMP_SENSING_SIGNAL_RLEASE, eSetBits);
             ESP_LOGI("Temp_Sensing_Release", "Temperature Sensing Release OK.");
-
         }
         else
         {
@@ -184,6 +193,8 @@ void Temp_Sensing_Task(void *pvParameters){
      esp_err_t result = ESP_FAIL;
      uint32_t signal = 0;
 
+     void (*OperationCompleteCallback)(TempSensing_Result_t result);
+
     while (1) {
                
                 
@@ -191,11 +202,11 @@ void Temp_Sensing_Task(void *pvParameters){
         {
         case TEMP_SENSING_POWER_OFF:
             
-            ESP_LOGI("Temp_Sensing_Task", "STATE: POWER_OFF");
+            ESP_LOGI("Temp_Sensing_Task", "STATE: POWER_OFfF");
 
             //SignalWait wait for the request signal
             tempSensingSignalWait( TEMP_SENSING_SIGNAL_REQUESTED,  portMAX_DELAY);
-
+            
             break;
 
         case TEMP_SENSING_RQUESTING:
@@ -266,11 +277,17 @@ void Temp_Sensing_Task(void *pvParameters){
             
             ESP_LOGI("Temp_Sensing_Task", "STATE: RELEASING");
 
+            OperationCompleteCallback = temp_sensing.config.callbacks.OperationCompleteCallback;
+
             result = tempSensing_Releasing();
             if ( result == ESP_OK)
             {
                 temp_sensing.state = TEMP_SENSING_POWER_OFF;
                 ESP_LOGI("Temp_Sensing_Task", "STATE: POWER_OFF");
+                if (OperationCompleteCallback != NULL)
+                {
+                    OperationCompleteCallback(TEMP_SENSING_RESULT_RELEASE);
+                }
             }
             else
             {
@@ -375,6 +392,22 @@ esp_err_t tempSensing_Releasing(void)
     esp_err_t result = ESP_FAIL;
     /*STOP and DELEATE timers*/
     /* Release resourses used like gpio spi uart etc*/
+
+    //Release SPI resources
+    result = spi_bus_remove_device(temp_sensing.SPI_max6675);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to remove SPI device: %s", esp_err_to_name(result));
+        return result;
+    }
+    //By the moment just releases spi device, not the bus
+    //result = spi_bus_free(SPI2_HOST);
+    //if (result != ESP_OK) {
+        //ESP_LOGE(TAG, "Failed to free SPI bus: %s", esp_err_to_name(result));
+        //return;
+    //}
+
+    ESP_LOGI(TAG, "SPI bus deinitialized successfully");
+    
     return result ;
 }
 
