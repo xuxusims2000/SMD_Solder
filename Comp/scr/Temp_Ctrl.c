@@ -3,6 +3,20 @@
 #include <Temp_Ctrl.h>
 
 
+
+void Temp_Ctrl_Init(void){
+
+
+    xTaskCreate(Temp_Ctrl_Task, "Tempaerature_control_Task", 2048, NULL, 1, NULL);
+}
+
+void Temp_Ctrl_Task(void){
+
+    while(1){
+        
+    }
+}
+
 // PID Variables
 double last_error = 0.0;
 double integral = 0.0;

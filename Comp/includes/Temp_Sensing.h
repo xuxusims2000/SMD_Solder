@@ -1,9 +1,13 @@
 
+#ifndef TEMP_SENSING_H_
+#define TEMP_SENSING_H_
 
 #include "driver/spi_master.h"
 #include "esp_err.h"          // Include for error handling
 #include "esp_log.h" 
 #include "driver/gpio.h"
+#include <string.h>
+
 
 
 // Define SPI pins
@@ -11,9 +15,53 @@
 #define PIN_NUM_SCLK GPIO_NUM_18
 #define PIN_NUM_CS   GPIO_NUM_5
 
+typedef enum {
+    TEMP_SENSING_UNDEFINED, 
+    TEMP_SENSING_POWER_OFF, 
+    TEMP_SENSING_RQUESTING,
+    TEMP_SENSING_REQUESTED,
+    TEMP_SENSING_START,
+    TEMP_SENSING_RELEASING
+} TempSensingState;
+
+typedef enum TempSensing_Result_e {
+    TEMP_SENSING_RESULT_UNDEFINED ,
+    TEMP_SENSING_RESULT_REQUEST,
+    TEMP_SENSING_RESULT_START,
+    TEMP_SENSING_RESULT_STOP,
+    TEMP_SENSING_RESULT_RELEASE,
+    TEMP_SENSING_RESULT_OPERATION_OK
+} TempSensing_Result_t;
+
+typedef struct TempSensing_Callbacks_e {
+    void (*OperationCompleteCallback)(TempSensing_Result_t result);
+
+} TempSensing_Callbacks_t;
+
+typedef struct TempSensing_Configuration_e {
+   TempSensing_Callbacks_t   callbacks;
+
+} TempSensing_Configuration_t;
+
+
+
 // Declare functions
+
+void Temp_Sensing_Task(void *pvParameters);
+
+void Temp_Sensing_Init(void);
+esp_err_t Temp_Sensing_Request(TempSensing_Configuration_t* config);
+esp_err_t Temp_Sensing_Start(void);
+void Temp_Sensing_Stop(void);
+void Temp_Sensing_Release(void);
+
+
+
+
 esp_err_t init_spi_bus(void); 
 esp_err_t add_max6675_device(spi_device_handle_t *handle);
 float read_max6675(spi_device_handle_t handle);
 
-void Test_temperature_sensing(void);
+float TempSensing_GetTemperature(void);
+
+#endif /* TEMP_SENSING_H_ */

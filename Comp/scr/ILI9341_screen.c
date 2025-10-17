@@ -266,3 +266,9 @@ void Test_main_screen(void)
     lvgl_main_screen(display);
     _lock_release(&lvgl_api_lock);
 }
+
+
+void Display_Init(void)
+{
+
+}

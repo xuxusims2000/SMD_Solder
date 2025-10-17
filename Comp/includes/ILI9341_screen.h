@@ -54,6 +54,8 @@ void example_lvgl_port_task(void *arg);
 
 void Test_main_screen(void);
 
+void Display_Init(void);
+
 
 
 

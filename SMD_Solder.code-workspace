@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"esp_lcd_touch_xpt2046.h": "c",
+			"stdint.h": "c",
+			"lvgl.h": "c",
+			"temp_ctrl.h": "c",
+			"temp_sensing.h": "c",
+			"ili9341_screen.h": "c",
+			"main.h": "c"
+		}
+	}
+}
