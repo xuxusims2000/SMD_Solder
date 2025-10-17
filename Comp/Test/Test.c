@@ -20,7 +20,8 @@ void test_function() {
 
     //-------Module temperature sensing tests----------------
     //Test_temperature_sensing_0();
-    Test_temperature_sensing_1();
+    //Test_temperature_sensing_1();
+    Test_temperature_sensing_2();
 
 
     //Test_main_screen();

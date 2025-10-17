@@ -179,9 +179,9 @@ void Temp_Sensing_Release(void)
 }
 
 
-float TempSensing_GetTemperature(spi_device_handle_t handle)
+float TempSensing_GetTemperature(void)
 {
-    temp_sensing.temperature = read_max6675(handle); // Replace NULL with actual device handle if needed
+    temp_sensing.temperature = read_max6675(temp_sensing.SPI_max6675); // Replace NULL with actual device handle if needed
 
 
     return temp_sensing.temperature; // Replace with actual temperature reading logic
@@ -368,7 +368,7 @@ float read_max6675(spi_device_handle_t handle) {
     }
 
     float temperature = (raw_data >> 3) * 0.25;
-    ESP_LOGI(TAG, "Temperature read: %.2f°C", temperature);
+    //ESP_LOGI(TAG, "Temperature read: %.2f°C", temperature);
     return temperature;
 }
 

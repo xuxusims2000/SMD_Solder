@@ -124,35 +124,58 @@ void Temp_Sensing_Test_Task_1(void *pvParameters){
 
 void Temp_Sensing_Test_Task_2(void *pvParameters) // Test task function prototype
 {
+    ESP_LOGI("Temp_Sensing_Test_Task", "--------------Started-----------------");
+    float temperature = 0.0;
+
+
+    /*callbacs*/
+        
+        testTempSensing.config.callbacks.OperationCompleteCallback = TestTempSensing_OperationCompleteCallback; 
+    
     for(uint8_t i=0; i<2; i++)
     {        
+        ESP_LOGI("Temp_Sensing_Task", "Time Test Iteration: %d", i);
         // Request temperature sensing
         Temp_Sensing_Request(&testTempSensing.config);
         vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
 
         TestTemp_Sensing_SignalWait( TEST_TEMP_SENSING_SIGNAL_REQUEST_COMPLETE,  portMAX_DELAY);
 
-        ESP_LOGE(" Temp_Sensing_Test_Task", "Request OK");
+        ESP_LOGI(" Temp_Sensing_Test_Task", "Request OK");
 
         Temp_Sensing_Start();
         vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
 
         TestTemp_Sensing_SignalWait( TEST_TEMP_SENSING_SIGNAL_START_COMPLETE,  portMAX_DELAY);
 
-        ESP_LOGE("Temp_Sensing_Test_Task", "Start OK");
+        ESP_LOGI("Temp_Sensing_Test_Task", "Start OK");
 
-        while(1)
-        {
-            
-
-            ESP_LOGE("Temp_Sensing_Test_Task", "-------------END----------------");
-
-            while(1)
-            {
-                vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
-            }
+        for (uint8_t j=0; j<5; j++)
+        {           
+            temperature= TempSensing_GetTemperature();
+            ESP_LOGI("Temp_Sensing_Test_Task", "Measured Temperature: %.2f °C", temperature);
+            vTaskDelay(pdMS_TO_TICKS(500)); // Delay for 500 mseconds
         }
+        
+        Temp_Sensing_Stop();
+        vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
+        TestTemp_Sensing_SignalWait( TEST_TEMP_SENSING_SIGNAL_STOP_COMPLETE,  portMAX_DELAY);
+        ESP_LOGI("Temp_Sensing_Test_Task", "Stop OK");
+
+        Temp_Sensing_Release();
+        vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
+        TestTemp_Sensing_SignalWait( TEST_TEMP_SENSING_SIGNAL_RELEASE_COMPLETE,  portMAX_DELAY);
+        ESP_LOGI("Temp_Sensing_Test_Task", "Release OK");
+
+        ESP_LOGI("Temp_Sensing_Test_Task", "-------------END----------------");
     }
+    
+    while(1)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
+    }
+        
+    
 }
 
 
