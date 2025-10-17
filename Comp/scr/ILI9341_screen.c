@@ -268,7 +268,3 @@ void Test_main_screen(void)
 }
 
 
-void Display_Init(void)
-{
-
-}

@@ -18,13 +18,13 @@ void test_function() {
     //Test_task_manaement_signals();
 
 
-    //-------Module temperature sensing tests----------------
+    /*-------Module temperature sensing tests----------------*/
     //Test_temperature_sensing_0();
     //Test_temperature_sensing_1();
-    Test_temperature_sensing_2();
+    //Test_temperature_sensing_2();
 
-
-    //Test_main_screen();
+    /*----------Module display----------------------*/
+    Test_main_screen();
     
     //Test_PID_control_();
 }
