@@ -12,6 +12,7 @@ CMakeFiles/
 *.o
 *.a
 *.log
+*.code-workspace
 
 # Ignore Dev Container settings (optional)
 .devcontainer/
