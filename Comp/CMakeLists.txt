@@ -8,11 +8,13 @@ idf_component_register(
         "scr/Display_Manager.c"
         "Test/Test.c"
         "Test/Temp_Sensing/TestTemp_Sensing.c"
+        "Test/Display_Manager/TestDisplay_Manager.c"
     INCLUDE_DIRS
         "includes"
         "scr"
         "Test"
         "Test/Temp_Sensing"
+        "Test/Display_Manager"
         "."
     REQUIRES
         lvgl

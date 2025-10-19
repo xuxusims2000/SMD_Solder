@@ -25,6 +25,9 @@ void test_function() {
 
     /*----------Module display----------------------*/
     Test_main_screen();
+    //Test_display_manager_1();
+    //Test_display_manager_2();
+
     
     //Test_PID_control_();
 }

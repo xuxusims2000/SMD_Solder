@@ -13,7 +13,9 @@
 			"temp_sensing.h": "c",
 			"ili9341_screen.h": "c",
 			"main.h": "c",
-			"display_manager.h": "c"
+			"display_manager.h": "c",
+			"test.h": "c",
+			"testdisplay_manager.h": "c"
 		}
 	}
 }
