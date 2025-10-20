@@ -31,7 +31,7 @@ void TestDisplayManager_OperationCompleteCallback(DisplayManager_Result_t result
 void Test_display_manager_1(){
 
     ESP_LOGI("TEST", "Test_display_manager_1 started"); 
-    Display_Manager_Init();
+    DisplayManager_Init();
 
     /* Create and start 'test task thread'*/
     xTaskCreate(Display_Manager_Test_Task_1, "Display_Manager_Test_Task_1", 2048, NULL, 1, &testDisplayManager.taskHandle);
