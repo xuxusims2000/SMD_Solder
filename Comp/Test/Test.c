@@ -3,6 +3,7 @@
 
 #include "ILI9341_screen.h"
 #include "TestTemp_Sensing.h"
+#include "TestDisplay_Manager.h"
 
 TaskHandle_t task1Handle = NULL;
 TaskHandle_t task2Handle = NULL;
@@ -24,8 +25,8 @@ void test_function() {
     //Test_temperature_sensing_2();
 
     /*----------Module display----------------------*/
-    Test_main_screen();
-    //Test_display_manager_1();
+    //Test_main_screen();
+    Test_display_manager_1();
     //Test_display_manager_2();
 
     

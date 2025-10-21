@@ -7,7 +7,6 @@
 #include "lvgl.h"
 
 
-static const char *TAG = "example";
 
 // Using SPI2 in the example
 #define LCD_HOST  SPI2_HOST

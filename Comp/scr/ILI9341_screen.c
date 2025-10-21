@@ -108,7 +108,7 @@
 
  void example_lvgl_port_task(void *arg)
 {
-    ESP_LOGI(TAG, "Starting LVGL task");
+    ESP_LOGI("example_lvgl_port_task", "Starting LVGL task");
     uint32_t time_till_next_ms = 0;
     while (1) {
         _lock_acquire(&lvgl_api_lock);
@@ -127,14 +127,14 @@
 
 void Test_main_screen(void)
 {
-    ESP_LOGI(TAG, "Turn off LCD backlight");
+    ESP_LOGI("Test_main_screen", "Turn off LCD backlight");
     gpio_config_t bk_gpio_config = {
         .mode = GPIO_MODE_OUTPUT,
         .pin_bit_mask = 1ULL << EXAMPLE_PIN_NUM_BK_LIGHT
     };
     ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
 
-    ESP_LOGI(TAG, "Initialize SPI bus");
+    ESP_LOGI("Test_main_screen", "Initialize SPI bus");
     spi_bus_config_t buscfg = {
         .sclk_io_num = EXAMPLE_PIN_NUM_SCLK,
         .mosi_io_num = EXAMPLE_PIN_NUM_MOSI,
@@ -145,7 +145,7 @@ void Test_main_screen(void)
     };
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
-    ESP_LOGI(TAG, "Install panel IO");
+    ESP_LOGI("Test_main_screen", "Install panel IO");
     esp_lcd_panel_io_handle_t io_handle = NULL;
     esp_lcd_panel_io_spi_config_t io_config = {
         .dc_gpio_num = EXAMPLE_PIN_NUM_LCD_DC,
@@ -166,7 +166,7 @@ void Test_main_screen(void)
         .bits_per_pixel = 16,
     };
 
-    ESP_LOGI(TAG, "Install ILI9341 panel driver");
+    ESP_LOGI("Test_main_screen", "Install ILI9341 panel driver");
     ESP_ERROR_CHECK(esp_lcd_new_panel_ili9341(io_handle, &panel_config, &panel_handle));
 
 
@@ -178,10 +178,10 @@ void Test_main_screen(void)
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 
-    ESP_LOGI(TAG, "Turn on LCD backlight");
+    ESP_LOGI("Test_main_screen", "Turn on LCD backlight");
     gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, EXAMPLE_LCD_BK_LIGHT_ON_LEVEL);
 
-    ESP_LOGI(TAG, "Initialize LVGL library");
+    ESP_LOGI("Test_main_screen", "Initialize LVGL library");
     lv_init();
 
     // create a lvgl display
@@ -204,7 +204,7 @@ void Test_main_screen(void)
     // set the callback which can copy the rendered image to an area of the display
     lv_display_set_flush_cb(display, example_lvgl_flush_cb);
 
-    ESP_LOGI(TAG, "Install LVGL tick timer");
+    ESP_LOGI("Test_main_screen", "Install LVGL tick timer");
     // Tick interface for LVGL (using esp_timer to generate 2ms periodic event)
     const esp_timer_create_args_t lvgl_tick_timer_args = {
         .callback = &example_increase_lvgl_tick,
@@ -214,7 +214,7 @@ void Test_main_screen(void)
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, EXAMPLE_LVGL_TICK_PERIOD_MS * 1000));
 
-    ESP_LOGI(TAG, "Register io panel event callback for LVGL flush ready notification");
+    ESP_LOGI("Test_main_screen", "Register io panel event callback for LVGL flush ready notification");
     const esp_lcd_panel_io_callbacks_t cbs = {
         .on_color_trans_done = example_notify_lvgl_flush_ready,
     };
@@ -244,7 +244,7 @@ void Test_main_screen(void)
     esp_lcd_touch_handle_t tp = NULL;
 
 
-    ESP_LOGI(TAG, "Initialize touch controller XPT2046");
+    ESP_LOGI("Test_main_screen", "Initialize touch controller XPT2046");
     ESP_ERROR_CHECK(esp_lcd_touch_new_spi_xpt2046(tp_io_handle, &tp_cfg, &tp));
 
 
@@ -256,10 +256,10 @@ void Test_main_screen(void)
     lv_indev_set_read_cb(indev, example_lvgl_touch_cb);
 
 
-    ESP_LOGI(TAG, "Create LVGL task");
+    ESP_LOGI("Test_main_screen", "Create LVGL task");
     xTaskCreate(example_lvgl_port_task, "LVGL", EXAMPLE_LVGL_TASK_STACK_SIZE, NULL, EXAMPLE_LVGL_TASK_PRIORITY, NULL);
 
-    ESP_LOGI(TAG, "Display LVGL Meter Widget");
+    ESP_LOGI("Test_main_screen", "Display LVGL Meter Widget");
     // Lock the mutex due to the LVGL APIs are not thread-safe
     _lock_acquire(&lvgl_api_lock);
     //example_lvgl_demo_ui(display);
