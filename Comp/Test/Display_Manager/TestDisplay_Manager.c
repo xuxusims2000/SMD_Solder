@@ -65,7 +65,7 @@ void Display_Manager_Test_Task_1(void *pvParameters){
     
           ESP_LOGI("Display_Manager_Test_Task", "Start OK");
     
-          vTaskDelay(pdMS_TO_TICKS(1000 *30)); // Delay for 1000 mseconds
+          //vTaskDelay(pdMS_TO_TICKS(1000 *30)); // Delay for 1000 mseconds
           
           DisplayManager_Stop();
           vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds

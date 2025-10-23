@@ -65,7 +65,16 @@ void DisplayManager_Init(void){
          // Optionally, turn the backlight off during setup
         gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, 0);
        
-       
+       // May need semaphore  
+        display_manager.DisplayManager_xSemaphoreHandle = xSemaphoreCreateBinary(); //Ceates a binary semaphore before using it
+        if (display_manager.DisplayManager_xSemaphoreHandle == NULL) {
+            ESP_LOGE("Display_Manager_Init", "Failed to create semaphore");
+            return;
+        }
+        xSemaphoreGive(display_manager.DisplayManager_xSemaphoreHandle);
+       display_manager.state = DISPLAY_MANAGER_POWER_OFF;
+        
+        
         xTaskCreate(Display_Manager_Task,
              "Display_Manager_Task", 
              4096, 
@@ -115,10 +124,11 @@ esp_err_t DisplayManager_Request(DisplayManager_Configuration_t* config){
 esp_err_t DisplayManager_Start(void)
 {
     esp_err_t result = ESP_FAIL;
-    
+
+    ESP_LOGI("Display_Manager_Task", "DisplayManager_Start");
     if ( display_manager.state == DISPLAY_MANAGER_REQUESTED)
     {
-        display_manager.state = DISPLAY_MANAGER_START;
+        
         xTaskNotify(display_manager.taskHandle, DISPLAY_MANEGER_SIGNAL_START, eSetBits);
         result = ESP_OK;
     }
@@ -209,10 +219,15 @@ void Display_Manager_Task(void *pvParameters)
                 {
                     
                     display_manager.state = DISPLAY_MANAGER_START;
-                    ESP_LOGI("Display_Manager_Task", "STATE: START");
+                    ESP_LOGI("Display_Manager_Task", "STATE: START from rquested");
                     if (display_manager.config.callbacks.OperationCompleteCallback != NULL)
                     {
                         display_manager.config.callbacks.OperationCompleteCallback(DISPLAY_MANAGER_RESULT_START);
+                        ESP_LOGI("Display_Manager_Task", " START callback defined");
+                    }
+                    else
+                    {
+                        ESP_LOGE("Display_Manager_Task", "No START callback defined");
                     }
                 }
                 else if (signal & DISPLAY_MANEGER_SIGNAL_RLEASE)
@@ -226,6 +241,7 @@ void Display_Manager_Task(void *pvParameters)
 
         case DISPLAY_MANAGER_START:
             
+           ESP_LOGI("Display_Manager_Task", "STATE: START");
             // --- 2. Lock LVGL access (if using locking) --- 
             _lock_acquire(&lvgl_api_lock2);
                 
@@ -234,6 +250,7 @@ void Display_Manager_Task(void *pvParameters)
 
             // --- 4. Unlock LVGL ---
             _lock_release(&lvgl_api_lock2);
+            vTaskDelay(pdMS_TO_TICKS(10)); // feeds watchdog
         
             signal = DisplayManagerSignalWait( DISPLAY_MANEGER_SIGNAL_STOP ,  portMAX_DELAY);
             
@@ -275,7 +292,8 @@ void Display_Manager_Task(void *pvParameters)
             ESP_LOGE("Display_Manager_Task", "STATE: UNDEFINED");
             display_manager.state = DISPLAY_MANAGER_POWER_OFF;
             break;
-        }  
+        }
+         vTaskDelay(pdMS_TO_TICKS(10));  // small delay is always healthy  
     }
 }
 
