@@ -7,6 +7,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_timer.h"
+
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_vendor.h"
 #include "esp_lcd_panel_ops.h"
@@ -28,6 +29,12 @@
 #include "Screen_design.h"
 
 static void lv_port_task(void *arg);
+
+void create_ui(void);
+void create_button_screen(void);
+static void button_event_handler(lv_event_t *e);
+// Define a variable to track the button's color state
+static bool button_is_red = false;
 
 static esp_lcd_panel_handle_t g_panel_handle = NULL;
 static esp_lcd_touch_handle_t g_tp_handle = NULL;
@@ -54,6 +61,33 @@ static void example_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_
 
 
 
+static void example_lvgl_touch_read_cb_gpt(lv_indev_drv_t *drv, lv_indev_data_t *data)
+{
+    esp_lcd_touch_handle_t tp = (esp_lcd_touch_handle_t) drv->user_data;
+
+    uint16_t x = 0, y = 0, strength = 0;
+    uint8_t point_num = 0;
+    bool touched = false;
+
+    // Always poll the controller before reading
+    esp_lcd_touch_read_data(tp);
+
+    // Newer API requires 6 arguments:
+    // esp_lcd_touch_get_coordinates(tp, &x, &y, &strength, &point_num, max_points)
+    esp_lcd_touch_get_coordinates(tp, &x, &y, &strength, &point_num, 1);
+
+    if (point_num > 0) {
+        touched = true;
+        data->point.x = x;
+        data->point.y = y;
+        data->state = LV_INDEV_STATE_PR;  // Pressed
+        ESP_LOGI("TOUCH", "Touch at (%d, %d)", x, y);
+    } else {
+        data->state = LV_INDEV_STATE_REL; // Released
+    }
+}
+
+
 static void example_lvgl_touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data)
 {
     // The touch controller handle is passed via user_data
@@ -73,6 +107,7 @@ static void example_lvgl_touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *dat
         data->point.x = x;
         data->point.y = y;
         data->state = LV_INDEV_STATE_PRESSED;
+        ESP_LOGI("TOUCH", "Touch at (%d,%d)", x, y);
     } else {
         // Touch is released
         data->state = LV_INDEV_STATE_RELEASED;
@@ -97,17 +132,21 @@ void init_ili9341_screen(void)
         };
         ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &buscfg, SPI_DMA_CH_AUTO));
     
-        esp_lcd_panel_io_handle_t io_handle = NULL;
-        esp_lcd_panel_io_spi_config_t io_config = {
-            .dc_gpio_num = EXAMPLE_PIN_NUM_LCD_DC,
-            .cs_gpio_num = EXAMPLE_PIN_NUM_LCD_CS,
-            .pclk_hz = EXAMPLE_LCD_PIXEL_CLOCK_HZ,
-            .lcd_cmd_bits = EXAMPLE_LCD_CMD_BITS,
+    esp_lcd_panel_io_handle_t io_handle = NULL;
+
+    esp_lcd_panel_io_spi_config_t io_config = {
+        .dc_gpio_num = EXAMPLE_PIN_NUM_LCD_DC,
+        .cs_gpio_num = EXAMPLE_PIN_NUM_LCD_CS,
+        .pclk_hz = EXAMPLE_LCD_PIXEL_CLOCK_HZ,
+        .lcd_cmd_bits = EXAMPLE_LCD_CMD_BITS,
             .lcd_param_bits = EXAMPLE_LCD_PARAM_BITS,
             .spi_mode = 0,
             .trans_queue_depth = 10,
         };
+
         ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_HOST, &io_config, &io_handle));
+        
+
 
         ESP_LOGI("DisplayManager_Request", "Creating LCD panel driver");
 
@@ -137,10 +176,14 @@ void init_ili9341_screen(void)
         ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_HOST, &tp_io_config, &tp_io_handle));
 
          esp_lcd_touch_config_t tp_cfg = {
-            .x_max = 4096,//EXAMPLE_LCD_H_RES,
-            .y_max = 4095,//EXAMPLE_LCD_V_RES,
+            .x_max = EXAMPLE_LCD_H_RES,
+            .y_max = EXAMPLE_LCD_V_RES,
             .rst_gpio_num = -1,
             .int_gpio_num = -1,
+            .levels = {
+                .reset = 0,
+                .interrupt = 0,
+            },
             .flags = {
                 .swap_xy = 1,
                 .mirror_x = 0,
@@ -155,17 +198,116 @@ void init_ili9341_screen(void)
         static lv_indev_drv_t indev_drv;
         lv_indev_drv_init(&indev_drv);
         indev_drv.type = LV_INDEV_TYPE_POINTER; 
-        indev_drv.read_cb = example_lvgl_touch_read_cb; // Your custom read function
+        indev_drv.read_cb = example_lvgl_touch_read_cb_gpt; // Your custom read function
         indev_drv.user_data = g_tp_handle; // **CRITICAL: Pass the handle here!**
-        lv_indev_drv_register(&indev_drv);
+        //lv_indev_drv_register(&indev_drv);
 
 }
 
 
 
 
-// Define a variable to track the button's color state
-static bool button_is_red = false;
+/* -----------------------------------MAIN FUNCTION STARTS HERE---------------------------------------*/
+
+void  Test_main_screen(void)
+{
+    printf("Starting main screen test...\n");
+
+    init_ili9341_screen();
+    
+     gpio_config_t bk_gpio_config = {
+            .mode = GPIO_MODE_OUTPUT,
+            .pin_bit_mask = 1ULL << EXAMPLE_PIN_NUM_BK_LIGHT
+            };
+        ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
+
+         // Optionally, turn the backlight off during setup
+        gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, 0);
+
+    // Initialize LVGL and display
+    lv_init();
+
+    lv_disp_draw_buf_init(&g_draw_buf, g_buf1, g_buf2, MY_DISP_HOR_RES*10) ;  /*Initialize the display buffer.*/
+
+   static lv_disp_drv_t disp_drv;        /*Descriptor of a display driver*/
+   lv_disp_drv_init(&disp_drv);          /*Basic initialization*/
+   disp_drv.flush_cb = example_lvgl_flush_cb; //my_disp_flush;    /*Set your driver function*/
+   disp_drv.draw_buf = &g_draw_buf;        /*Assign the buffer to the display*/
+   disp_drv.hor_res = 240;   /*Set the horizontal resolution of the display*/
+   disp_drv.ver_res = 320;   /*Set the vertical resolution of the display*/// TO 320x240 (Landscape)
+    // *** FIX: Use the global static handler to link the display driver ***
+    disp_drv.user_data = g_panel_handle;
+    lv_disp_drv_register(&disp_drv);      /*Finally register the driver*/
+
+
+
+// Optional: Set the rotation if configured in panel_config
+// lv_disp_set_rotation(disp, LV_DISP_ROT_90);
+
+   static lv_indev_drv_t indev_drv;           /*Descriptor of a input device driver*/
+    lv_indev_drv_init(&indev_drv);             /*Basic initialization*/
+    indev_drv.type = LV_INDEV_TYPE_POINTER;    /*Touch pad is a pointer-like device*/
+    indev_drv.read_cb = example_lvgl_touch_read_cb; //my_touchpad_read;      /*Set your driver function*/
+
+// *** FIX: Use the global static handler to link the touch driver ***
+    indev_drv.user_data = g_tp_handle;
+
+    lv_indev_drv_register(&indev_drv);         /*Finally register the driver*/
+
+    //create_ui();
+
+    //create_button_screen();
+    lv_obj_t *label = lv_label_create(lv_scr_act());
+    lv_label_set_text(label, "Hello LVGL 8.4!");
+    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+
+     // Turn on the backlight after setup
+    // 4. Start the LVGL Task
+    //    This is what starts the engine that draws the UI you just created.
+    xTaskCreatePinnedToCore(lv_port_task, "LVGL", 8192 * 2, NULL, 5, NULL, 1);
+
+    printf("Main screen test completed.\n");
+}
+
+// Mutex variable
+static SemaphoreHandle_t lvgl_mux = NULL;
+
+// Helper function to acquire the lock
+static bool lvgl_lock(uint32_t timeout_ms)
+{
+    // Try to acquire the mutex, waiting for the specified timeout
+    const TickType_t timeout_ticks = (timeout_ms == portMAX_DELAY) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
+    return xSemaphoreTakeRecursive(lvgl_mux, timeout_ticks) == pdTRUE;
+}
+
+// Helper function to release the lock
+static void lvgl_unlock(void)
+{
+    xSemaphoreGiveRecursive(lvgl_mux);
+}
+
+// Define this task outside your init function
+static void lv_port_task(void *arg)
+{
+    ESP_LOGI("LVGL", "Starting LVGL task");
+    while (1) {
+        // The task needs to take the lock before accessing LVGL APIs
+        // Assuming a recursive mutex is used as per common examples:
+        // if (pdTRUE == lvgl_lock(portMAX_DELAY)) {
+        //     lv_timer_handler();
+        //     lvgl_unlock();
+        // }
+        // For a single-task setup, a simple handler is enough:
+        //lvgl_lock(portMAX_DELAY);
+        lv_timer_handler();
+        //lvgl_unlock();
+
+        // Delay to prevent the task from hogging the CPU
+        vTaskDelay(pdMS_TO_TICKS(10)); 
+    }
+}
+
+
 
 // Event handler function for the button click
 static void button_event_handler(lv_event_t *e)
@@ -234,106 +376,4 @@ void create_ui(void)
     
     // 3. Load the Screen
     lv_disp_load_scr(scr);
-}
-
-
-
-void  Test_main_screen(void)
-{
-    printf("Starting main screen test...\n");
-
-    init_ili9341_screen();
-    
-     gpio_config_t bk_gpio_config = {
-            .mode = GPIO_MODE_OUTPUT,
-            .pin_bit_mask = 1ULL << EXAMPLE_PIN_NUM_BK_LIGHT
-            };
-        ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
-
-         // Optionally, turn the backlight off during setup
-        gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, 0);
-
-    // Initialize LVGL and display
-    lv_init();
-
-    lv_disp_draw_buf_init(&g_draw_buf, g_buf1, g_buf2, MY_DISP_HOR_RES*10) ;  /*Initialize the display buffer.*/
-
-   static lv_disp_drv_t disp_drv;        /*Descriptor of a display driver*/
-   lv_disp_drv_init(&disp_drv);          /*Basic initialization*/
-   disp_drv.flush_cb = example_lvgl_flush_cb; //my_disp_flush;    /*Set your driver function*/
-   disp_drv.draw_buf = &g_draw_buf;        /*Assign the buffer to the display*/
-   disp_drv.hor_res = 240;   /*Set the horizontal resolution of the display*/
-   disp_drv.ver_res = 320;   /*Set the vertical resolution of the display*/// TO 320x240 (Landscape):
-
-
-
-
-      // *** FIX: Use the global static handler to link the display driver ***
-    disp_drv.user_data = g_panel_handle;
-
-   lv_disp_drv_register(&disp_drv);      /*Finally register the driver*/
-
-
-
-// Optional: Set the rotation if configured in panel_config
-// lv_disp_set_rotation(disp, LV_DISP_ROT_90);
-
-   static lv_indev_drv_t indev_drv;           /*Descriptor of a input device driver*/
-    lv_indev_drv_init(&indev_drv);             /*Basic initialization*/
-    indev_drv.type = LV_INDEV_TYPE_POINTER;    /*Touch pad is a pointer-like device*/
-    indev_drv.read_cb = example_lvgl_touch_read_cb; //my_touchpad_read;      /*Set your driver function*/
-
-// *** FIX: Use the global static handler to link the touch driver ***
-    indev_drv.user_data = g_tp_handle;
-
-    lv_indev_drv_register(&indev_drv);         /*Finally register the driver*/
-
-    //create_ui();
-
-    create_button_screen();
-
-     // Turn on the backlight after setup
-    // 4. Start the LVGL Task
-    //    This is what starts the engine that draws the UI you just created.
-    xTaskCreatePinnedToCore(lv_port_task, "LVGL", 8192 * 2, NULL, 5, NULL, 1);
-
-    printf("Main screen test completed.\n");
-}
-
-// Mutex variable
-static SemaphoreHandle_t lvgl_mux = NULL;
-
-// Helper function to acquire the lock
-static bool lvgl_lock(uint32_t timeout_ms)
-{
-    // Try to acquire the mutex, waiting for the specified timeout
-    const TickType_t timeout_ticks = (timeout_ms == portMAX_DELAY) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
-    return xSemaphoreTakeRecursive(lvgl_mux, timeout_ticks) == pdTRUE;
-}
-
-// Helper function to release the lock
-static void lvgl_unlock(void)
-{
-    xSemaphoreGiveRecursive(lvgl_mux);
-}
-
-// Define this task outside your init function
-static void lv_port_task(void *arg)
-{
-    ESP_LOGI("LVGL", "Starting LVGL task");
-    while (1) {
-        // The task needs to take the lock before accessing LVGL APIs
-        // Assuming a recursive mutex is used as per common examples:
-        // if (pdTRUE == lvgl_lock(portMAX_DELAY)) {
-        //     lv_timer_handler();
-        //     lvgl_unlock();
-        // }
-        // For a single-task setup, a simple handler is enough:
-        //lvgl_lock(portMAX_DELAY);
-        lv_timer_handler();
-        //lvgl_unlock();
-
-        // Delay to prevent the task from hogging the CPU
-        vTaskDelay(pdMS_TO_TICKS(5)); 
-    }
 }
