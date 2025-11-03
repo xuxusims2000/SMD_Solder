@@ -89,6 +89,7 @@
     esp_lcd_touch_read_data(touch_pad);
     /* Get coordinates */
     bool touchpad_pressed = esp_lcd_touch_get_coordinates(touch_pad, touchpad_x, touchpad_y, NULL, &touchpad_cnt, 1);
+    ESP_LOGI("TOUCH", "Touch at (%d,%d) str=%d pts=%d",  touchpad_x[0], touchpad_y[0], data->state, touchpad_cnt);
 
     if (touchpad_pressed && touchpad_cnt > 0) {
         data->point.x = touchpad_x[0];
