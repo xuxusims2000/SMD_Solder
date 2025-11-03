@@ -41,17 +41,7 @@
 #define EXAMPLE_LVGL_TASK_PRIORITY     2
 #define CONFIG_EXAMPLE_LCD_MIRROR_Y 1
 
-void example_lvgl_demo_ui(lv_disp_t *disp);
-void lvgl_main_screen(lv_disp_t *disp);
-
-bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx);
-void example_lvgl_port_update_callback(lv_display_t *disp);
-void example_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map);
-void example_lvgl_touch_cb(lv_indev_t *indev, lv_indev_data_t *data);
-void example_increase_lvgl_tick(void *arg);
-void example_lvgl_port_task(void *arg);
-
-void Test_main_screen(void);
+void  Test_main_screen(void);
 
 
 

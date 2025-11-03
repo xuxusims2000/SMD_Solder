@@ -29,7 +29,7 @@ typedef struct {
     TaskHandle_t                    taskHandle;
     SemaphoreHandle_t               DisplayManager_xSemaphoreHandle; //Defines a semaphore to manage the resource
     
-    lv_display_t*                  lvgl_display;
+
 
     TaskHandle_t                    lvgl_task_handle;
 
@@ -83,12 +83,7 @@ void DisplayManager_Init(void){
              &display_manager.taskHandle);
 
         ESP_LOGI("Display_Manager_Init", "Starting LCD display and LVGL TASK");
-        xTaskCreate(example_lvgl_port_task, 
-                "LVGL", 
-                EXAMPLE_LVGL_TASK_STACK_SIZE, 
-                NULL, 
-                EXAMPLE_LVGL_TASK_PRIORITY, 
-                &display_manager.lvgl_task_handle);
+
     }
 }
 
@@ -242,15 +237,8 @@ void Display_Manager_Task(void *pvParameters)
         case DISPLAY_MANAGER_START:
             
            ESP_LOGI("Display_Manager_Task", "STATE: START");
-            // --- 2. Lock LVGL access (if using locking) --- 
-            _lock_acquire(&lvgl_api_lock2);
-                
-            // --- 3. Display the main screen ---
-            lvgl_main_screen(display_manager.lvgl_display); 
 
-            // --- 4. Unlock LVGL ---
-            _lock_release(&lvgl_api_lock2);
-            vTaskDelay(pdMS_TO_TICKS(10)); // feeds watchdog
+
         
             signal = DisplayManagerSignalWait( DISPLAY_MANEGER_SIGNAL_STOP ,  portMAX_DELAY);
             
@@ -347,38 +335,6 @@ esp_err_t DisplayManager_Requesting(void)
         ESP_LOGI("DisplayManager_Request", "Turning on LCD backlight");
         gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, EXAMPLE_LCD_BK_LIGHT_ON_LEVEL);
 
-        ESP_LOGI("DisplayManager_Request", "Initializing LVGL");
-        lv_init();
-
-        // Create LVGL display and buffers
-        display_manager.lvgl_display = lv_display_create(EXAMPLE_LCD_H_RES, EXAMPLE_LCD_V_RES);
-
-        size_t draw_buffer_sz = EXAMPLE_LCD_H_RES * EXAMPLE_LVGL_DRAW_BUF_LINES * sizeof(lv_color16_t);
-        void *buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_DMA);
-        void *buf2 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_DMA);
-        assert(buf1 && buf2);
-
-        lv_display_set_buffers(display_manager.lvgl_display, buf1, buf2, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
-        lv_display_set_user_data(display_manager.lvgl_display, panel_handle);
-        lv_display_set_color_format(display_manager.lvgl_display, LV_COLOR_FORMAT_RGB565);
-        lv_display_set_flush_cb(display_manager.lvgl_display, example_lvgl_flush_cb);
-
-        // LVGL tick timer
-        const esp_timer_create_args_t lvgl_tick_timer_args = {
-            .callback = &example_increase_lvgl_tick,
-            .name = "lvgl_tick"
-        };
-        esp_timer_handle_t lvgl_tick_timer = NULL;
-        ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
-        ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, EXAMPLE_LVGL_TICK_PERIOD_MS * 1000));
-
-        // Register flush done callback
-        const esp_lcd_panel_io_callbacks_t cbs = {
-            .on_color_trans_done = example_notify_lvgl_flush_ready,
-        };
-        ESP_ERROR_CHECK(esp_lcd_panel_io_register_event_callbacks(io_handle, &cbs, display_manager.lvgl_display));
-
-        ESP_LOGI("DisplayManager_Request", "LCD and LVGL successfully requested");
     
             // ---------- TOUCH SETUP ----------
         ESP_LOGI("DisplayManager_Request", "Initializing touch controller XPT2046");
@@ -405,14 +361,7 @@ esp_err_t DisplayManager_Requesting(void)
         esp_lcd_touch_handle_t tp = NULL;
         ESP_ERROR_CHECK(esp_lcd_touch_new_spi_xpt2046(tp_io_handle, &tp_cfg, &tp));
 
-        // Register LVGL input device for touch
-        static lv_indev_t *indev;
-        indev = lv_indev_create();
-        lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
-        lv_indev_set_display(indev, display_manager.lvgl_display);
-        lv_indev_set_user_data(indev, tp);
-        lv_indev_set_read_cb(indev, example_lvgl_touch_cb);
-
+        
         ESP_LOGI("DisplayManager_Request", "Touch controller initialized");
     
     result = ESP_OK;
