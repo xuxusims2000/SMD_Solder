@@ -25,8 +25,8 @@ void test_function() {
     //Test_temperature_sensing_2();
 
     /*----------Module display----------------------*/
-    //Test_main_screen();
-    Test_display_manager_1();
+    Test_main_screen();
+    //Test_display_manager_1();
     //Test_display_manager_2();
 
     

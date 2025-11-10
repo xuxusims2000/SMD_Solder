@@ -23,6 +23,7 @@
 
 #include "ILI9341_screen.h"
 #include "Screen_design.h"
+#include "ui.h"
 
 // LVGL library is not thread-safe, this example will call LVGL APIs from different tasks, so use a mutex to protect it
  _lock_t lvgl_api_lock;
@@ -89,7 +90,7 @@
     esp_lcd_touch_read_data(touch_pad);
     /* Get coordinates */
     bool touchpad_pressed = esp_lcd_touch_get_coordinates(touch_pad, touchpad_x, touchpad_y, NULL, &touchpad_cnt, 1);
-    ESP_LOGI("TOUCH", "Touch at (%d,%d) str=%d pts=%d",  touchpad_x[0], touchpad_y[0], data->state, touchpad_cnt);
+    //ESP_LOGI("TOUCH", "Touch at (%d,%d) str=%d pts=%d",  touchpad_x[0], touchpad_y[0], data->state, touchpad_cnt);
 
     if (touchpad_pressed && touchpad_cnt > 0) {
         data->point.x = touchpad_x[0];
@@ -264,7 +265,8 @@ void Test_main_screen(void)
     // Lock the mutex due to the LVGL APIs are not thread-safe
     _lock_acquire(&lvgl_api_lock);
     //example_lvgl_demo_ui(display);
-    lvgl_main_screen(display);
+    //lvgl_main_screen(display);
+    ui_init_sql();
     _lock_release(&lvgl_api_lock);
 }
 

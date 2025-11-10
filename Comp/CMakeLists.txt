@@ -9,12 +9,20 @@ idf_component_register(
         "Test/Test.c"
         "Test/Temp_Sensing/TestTemp_Sensing.c"
         "Test/Display_Manager/TestDisplay_Manager.c"
+        UI/screens/ui_Screen1.c
+        UI/screens/ui_Screen2.c
+        UI/ui.c
+        UI/components/ui_comp_hook.c
+        UI/ui_helpers.c
+        UI/images/ui_img_up_buton_png.c
+        UI/images/ui_img_retun_button_png.c
     INCLUDE_DIRS
         "includes"
         "scr"
         "Test"
         "Test/Temp_Sensing"
         "Test/Display_Manager"
+        "UI"
         "."
     REQUIRES
         lvgl
