@@ -1,526 +1,365 @@
-
-
 #include "Display_Manager.h"
 
+/*============================== Defines ==============================*/
 
+#define DISPLAY_MANAGER_SIGNAL_REQUESTED   (1 << 0)
+#define DISPLAY_MANAGER_SIGNAL_RELEASE     (1 << 1)
+#define DISPLAY_MANAGER_SIGNAL_START       (1 << 2)
+#define DISPLAY_MANAGER_SIGNAL_STOP        (1 << 3)
 
-#define DISPLAY_MANEGER_SIGNAL_REQUESTED   (1 << 0)  // Signal to request display manager
-#define DISPLAY_MANEGER_SIGNAL_RLEASE      (1 << 1)  // Signal to indicate display manager 
-#define DISPLAY_MANEGER_SIGNAL_START       (1 << 2)  // Signal to indicate display manager 
-#define DISPLAY_MANEGER_SIGNAL_STOP        (1 << 3)  // Signal to release display manager
+/*============================== Static Prototypes ==============================*/
 
+static esp_err_t DisplayManager_Requesting(void);
+static esp_err_t DisplayManager_Releasing(void);
+static uint32_t DisplayManagerSignalWait(uint32_t signal, uint32_t timeout);
 
+/*============================== Private Global Variables ==============================*/
 
-esp_err_t DisplayManager_Requesting(void);
-
-uint32_t DisplayManagerSignalWait(uint32_t signal, uint32_t timeout);
-
-esp_err_t DisplayManager_Releasing(void);
-
-_lock_t lvgl_api_lock2;
+static _lock_t lvgl_api_lock2;
 
 typedef struct {
-    DisplayManagerState                state;
+    DisplayManagerState              state;
+    DisplayManager_Configuration_t   config;
+    uint32_t                         signals;
 
-    DisplayManager_Configuration_t     config;
+    TaskHandle_t                     taskHandle;
+    SemaphoreHandle_t                xSemaphore;
 
-    uint32_t                        signals;  // Bitmask for signals
+    lv_display_t*                    lvgl_display;
+    TaskHandle_t                     lvgl_task_handle;
+    bool                             lvgl_initialized;
 
-    TaskHandle_t                    taskHandle;
-    SemaphoreHandle_t               DisplayManager_xSemaphoreHandle; //Defines a semaphore to manage the resource
-    
-    lv_display_t*                  lvgl_display;
+    esp_lcd_panel_io_handle_t        panel_io_handle;
+    esp_lcd_panel_handle_t           panel_handle;
+    esp_lcd_panel_io_handle_t        touch_io_handle;
+    esp_lcd_touch_handle_t           touch_handle;
+    esp_timer_handle_t               lvgl_tick_timer;
 
-    TaskHandle_t                    lvgl_task_handle;
-
+    void*                            lvgl_buf1;
+    void*                            lvgl_buf2;
 } DisplayManager_t;
-
-/* Private variables --------------------------------------------------*/
 
 static DisplayManager_t display_manager = {
     .state = DISPLAY_MANAGER_UNDEFINED,
     .signals = 0,
-    .taskHandle= NULL,
-    .DisplayManager_xSemaphoreHandle = NULL,
-    // Initialize other members as needed
+    .taskHandle = NULL,
+    .xSemaphore = NULL,
 };
 
-void DisplayManager_Init(void){
+/*============================== Public API ==============================*/
 
-   
-    if (   (display_manager.state == DISPLAY_MANAGER_UNDEFINED) 
-        && (display_manager.taskHandle == NULL) )
-    {
-        ESP_LOGI("Display_Manager", "INIT");
-       
-        
-        /*---------------GPIO configuration backlight pin--------------- */
-        ESP_LOGI("Display_Manager_Init", "Turn off LCD backlight");  
+void DisplayManager_Init(void)
+{
+    if ((display_manager.state == DISPLAY_MANAGER_UNDEFINED) && (display_manager.taskHandle == NULL)) {
+        ESP_LOGI("Display_Manager", "Initializing...");
+
+        // Configure backlight GPIO
         gpio_config_t bk_gpio_config = {
             .mode = GPIO_MODE_OUTPUT,
             .pin_bit_mask = 1ULL << EXAMPLE_PIN_NUM_BK_LIGHT
-            };
+        };
         ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
-
-         // Optionally, turn the backlight off during setup
         gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, 0);
-       
-       // May need semaphore  
-        display_manager.DisplayManager_xSemaphoreHandle = xSemaphoreCreateBinary(); //Ceates a binary semaphore before using it
-        if (display_manager.DisplayManager_xSemaphoreHandle == NULL) {
+
+        // Create semaphore
+        display_manager.xSemaphore = xSemaphoreCreateBinary();
+        if (display_manager.xSemaphore == NULL) {
             ESP_LOGE("Display_Manager_Init", "Failed to create semaphore");
             return;
         }
-        xSemaphoreGive(display_manager.DisplayManager_xSemaphoreHandle);
-       display_manager.state = DISPLAY_MANAGER_POWER_OFF;
-        
-        
-        xTaskCreate(Display_Manager_Task,
-             "Display_Manager_Task", 
-             4096, 
-             NULL, 
-             5, //!!!!!!!!!!!! Mirar prioritat
-             &display_manager.taskHandle);
+        xSemaphoreGive(display_manager.xSemaphore);
 
-        ESP_LOGI("Display_Manager_Init", "Starting LCD display and LVGL TASK");
-        xTaskCreate(example_lvgl_port_task, 
-                "LVGL", 
-                EXAMPLE_LVGL_TASK_STACK_SIZE, 
-                NULL, 
-                EXAMPLE_LVGL_TASK_PRIORITY, 
-                &display_manager.lvgl_task_handle);
+        display_manager.state = DISPLAY_MANAGER_POWER_OFF;
+
+        // Create display manager main task
+        xTaskCreate(Display_Manager_Task,
+                    "Display_Manager_Task",
+                    4096 * 4,
+                    NULL,
+                    5,
+                    &display_manager.taskHandle);
     }
 }
 
-esp_err_t DisplayManager_Request(DisplayManager_Configuration_t* config){
-
-    esp_err_t result = ESP_FAIL;
-    BaseType_t xResult ;
-    
-    //chck if the semaphore is available
-    
-    xResult =  xSemaphoreTake(display_manager.DisplayManager_xSemaphoreHandle, 0);
-    //ESP_LOGI("TasDisplayManager_Request", "Try to request display manager: %d",xResult);
-    if ( xResult == pdTRUE) //Try to take the semaphore, wait 0 ticks if not available
-    {
-        ESP_LOGI("DisplayManager_Request", "Semaphore taken immediately!"); // if yes set the application callbacks
-        //Probably here goes a callback for interruptuions to the application
-
-        memcpy(&display_manager.config, config, sizeof(DisplayManager_Configuration_t));
-
- 
-        //change state
-        display_manager.state = DISPLAY_MANAGER_RQUESTING;
-        xTaskNotify(display_manager.taskHandle, DISPLAY_MANEGER_SIGNAL_REQUESTED, eSetBits);
-    } 
-    else
-    {
-        ESP_LOGE("DisplayManager_Request", "Semaphore not available");
+esp_err_t DisplayManager_Request(DisplayManager_Configuration_t* config)
+{
+    if (xSemaphoreTake(display_manager.xSemaphore, 0) != pdTRUE) {
+        ESP_LOGW("DisplayManager_Request", "Semaphore not available");
+        return ESP_FAIL;
     }
 
-   return result = ESP_OK;
+    ESP_LOGI("DisplayManager_Request", "Semaphore taken, requesting display");
+
+    memcpy(&display_manager.config, config, sizeof(DisplayManager_Configuration_t));
+    display_manager.state = DISPLAY_MANAGER_REQUESTING;
+
+    xTaskNotify(display_manager.taskHandle, DISPLAY_MANAGER_SIGNAL_REQUESTED, eSetBits);
+    return ESP_OK;
 }
 
 esp_err_t DisplayManager_Start(void)
 {
-    esp_err_t result = ESP_FAIL;
-
-    ESP_LOGI("Display_Manager_Task", "DisplayManager_Start");
-    if ( display_manager.state == DISPLAY_MANAGER_REQUESTED)
-    {
-        
-        xTaskNotify(display_manager.taskHandle, DISPLAY_MANEGER_SIGNAL_START, eSetBits);
-        result = ESP_OK;
-    }
-    else
-    {
-        ESP_LOGE("DisplayManager_Start", "Display Manager not in REQUESTED state");
-        result = ESP_FAIL;
+    if (display_manager.state != DISPLAY_MANAGER_REQUESTED) {
+        ESP_LOGE("DisplayManager_Start", "Invalid state (%d)", display_manager.state);
+        return ESP_FAIL;
     }
 
-    return result;
+    xTaskNotify(display_manager.taskHandle, DISPLAY_MANAGER_SIGNAL_START, eSetBits);
+    return ESP_OK;
 }
 
 void DisplayManager_Stop(void)
 {
-    
-    if ( display_manager.state == DISPLAY_MANAGER_START)
-    {
-
-        xTaskNotify(display_manager.taskHandle, DISPLAY_MANEGER_SIGNAL_STOP, eSetBits);
+    if (display_manager.state == DISPLAY_MANAGER_START) {
+        xTaskNotify(display_manager.taskHandle, DISPLAY_MANAGER_SIGNAL_STOP, eSetBits);
+        ESP_LOGI("DisplayManager_Stop", "Stopping display manager");
+    } else {
+        ESP_LOGE("DisplayManager_Stop", "Invalid state (%d)", display_manager.state);
     }
-    else
-    {
-        ESP_LOGE("DisplayManager_Stop", "Error: Display Manager not in START state");
-    }
-
 }
 
 esp_err_t DisplayManager_Release(void)
 {
-    
-    esp_err_t result = ESP_FAIL;
-    result = xSemaphoreGive(display_manager.DisplayManager_xSemaphoreHandle);
-    //ESP_LOGI("DisplayManager_Release", "Releasing display manager: %d",result);
-
-    return result;
+    xTaskNotify(display_manager.taskHandle, DISPLAY_MANAGER_SIGNAL_RELEASE, eSetBits);
+    xSemaphoreGive(display_manager.xSemaphore);
+    return ESP_OK;
 }
 
-
+/*============================== Main Task ==============================*/
 
 void Display_Manager_Task(void *pvParameters)
 {
+    esp_err_t result;
+    uint32_t signal;
+    void (*OperationCompleteCallback)(DisplayManager_Result_t result);
 
-     esp_err_t result = ESP_FAIL;
-     uint32_t signal = 0;
+    for (;;) {
+        switch (display_manager.state) {
 
-     void (*OperationCompleteCallback)(DisplayManager_Result_t result);
-
-    while (1) {
-               
-                
-        switch (display_manager.state)
-        {
         case DISPLAY_MANAGER_POWER_OFF:
-            
-            ESP_LOGI("Display_Manager_Task", "STATE: POWER_OFfF");
-
-            //SignalWait wait for the request signal
-            DisplayManagerSignalWait( DISPLAY_MANEGER_SIGNAL_REQUESTED,  portMAX_DELAY);
-            
+            ESP_LOGI("Display_Manager_Task", "STATE: POWER_OFF");
+            DisplayManagerSignalWait(DISPLAY_MANAGER_SIGNAL_REQUESTED, portMAX_DELAY);
             break;
 
-        case DISPLAY_MANAGER_RQUESTING:
-            
+        case DISPLAY_MANAGER_REQUESTING:
             result = DisplayManager_Requesting();
-            if ( result == ESP_OK)
-            {
+            if (result == ESP_OK) {
                 display_manager.state = DISPLAY_MANAGER_REQUESTED;
                 ESP_LOGI("Display_Manager_Task", "STATE: REQUESTED");
-                if (display_manager.config.callbacks.OperationCompleteCallback != NULL)
-                {
+                if (display_manager.config.callbacks.OperationCompleteCallback)
                     display_manager.config.callbacks.OperationCompleteCallback(DISPLAY_MANAGER_RESULT_REQUEST);
-                }
-            }
-            else
-            {
-                ESP_LOGE("Display_Manager_Task", "REQUESTING ERROR -> POWER_OFF");
-                display_manager.state = DISPLAY_MANAGER_POWER_OFF;   
+            } else {
+                ESP_LOGE("Display_Manager_Task", "REQUEST ERROR -> POWER_OFF");
+                display_manager.state = DISPLAY_MANAGER_POWER_OFF;
             }
             break;
 
         case DISPLAY_MANAGER_REQUESTED:
-            ESP_LOGI("Display_Manager_Task", "STATE: REQUESTED");
-            //Wait for start or release signal
-            {
-                signal = DisplayManagerSignalWait( DISPLAY_MANEGER_SIGNAL_START | DISPLAY_MANEGER_SIGNAL_RLEASE,  portMAX_DELAY);
-                
-                if (signal & DISPLAY_MANEGER_SIGNAL_START)
-                {
-                    
-                    display_manager.state = DISPLAY_MANAGER_START;
-                    ESP_LOGI("Display_Manager_Task", "STATE: START from rquested");
-                    if (display_manager.config.callbacks.OperationCompleteCallback != NULL)
-                    {
-                        display_manager.config.callbacks.OperationCompleteCallback(DISPLAY_MANAGER_RESULT_START);
-                        ESP_LOGI("Display_Manager_Task", " START callback defined");
-                    }
-                    else
-                    {
-                        ESP_LOGE("Display_Manager_Task", "No START callback defined");
-                    }
-                }
-                else if (signal & DISPLAY_MANEGER_SIGNAL_RLEASE)
-                {
-                    display_manager.state = DISPLAY_MANAGER_RELEASING;
-                    ESP_LOGI("Display_Manager_Task", "STATE: RELEASING");
-                }
-            }  
-
+            signal = DisplayManagerSignalWait(DISPLAY_MANAGER_SIGNAL_START | DISPLAY_MANAGER_SIGNAL_RELEASE, portMAX_DELAY);
+            if (signal & DISPLAY_MANAGER_SIGNAL_START) {
+                display_manager.state = DISPLAY_MANAGER_START;
+                if (display_manager.config.callbacks.OperationCompleteCallback)
+                    display_manager.config.callbacks.OperationCompleteCallback(DISPLAY_MANAGER_RESULT_START);
+            } else if (signal & DISPLAY_MANAGER_SIGNAL_RELEASE) {
+                display_manager.state = DISPLAY_MANAGER_RELEASING;
+            }
             break;
 
         case DISPLAY_MANAGER_START:
-            
-           ESP_LOGI("Display_Manager_Task", "STATE: START");
-            // --- 2. Lock LVGL access (if using locking) --- 
-            _lock_acquire(&lvgl_api_lock2);
-                
-            // --- 3. Display the main screen ---
-            lvgl_main_screen(display_manager.lvgl_display); 
-
-            // --- 4. Unlock LVGL ---
-            _lock_release(&lvgl_api_lock2);
+            ESP_LOGI("Display_Manager_Task", "STATE: START");
+            //_lock_acquire(&lvgl_api_lock2);
+            ESP_LOGI("Display_Manager_Task", "Calling ui_init_sql()...");
+            lv_async_call((lv_async_cb_t)ui_init_sql, NULL);
+            ESP_LOGI("Display_Manager_Task", "ui_init_sql() returned");
+            //_lock_release(&lvgl_api_lock2);
             vTaskDelay(pdMS_TO_TICKS(10)); // feeds watchdog
-        
-            signal = DisplayManagerSignalWait( DISPLAY_MANEGER_SIGNAL_STOP ,  portMAX_DELAY);
-            
-            if (signal & DISPLAY_MANEGER_SIGNAL_STOP)
-            {
+
+            signal = DisplayManagerSignalWait(DISPLAY_MANAGER_SIGNAL_STOP, portMAX_DELAY);
+            if (signal & DISPLAY_MANAGER_SIGNAL_STOP) {
                 display_manager.state = DISPLAY_MANAGER_REQUESTED;
-                ESP_LOGI("Display_Manager_Task", "STATE: REQUESTED");
-                if (display_manager.config.callbacks.OperationCompleteCallback != NULL)
-                {
+                if (display_manager.config.callbacks.OperationCompleteCallback)
                     display_manager.config.callbacks.OperationCompleteCallback(DISPLAY_MANAGER_RESULT_STOP);
-                }
             }
-           
             break;
 
         case DISPLAY_MANAGER_RELEASING:
-            
-            ESP_LOGI("Display_Manager_Task", "STATE: RELEASING");
-
             OperationCompleteCallback = display_manager.config.callbacks.OperationCompleteCallback;
-
             result = DisplayManager_Releasing();
-            if ( result == ESP_OK)
-            {
+            if (result == ESP_OK) {
                 display_manager.state = DISPLAY_MANAGER_POWER_OFF;
-                ESP_LOGI("Display_Manager_Task", "STATE: POWER_OFF");
-                if (OperationCompleteCallback != NULL)
-                {
+                if (OperationCompleteCallback)
                     OperationCompleteCallback(DISPLAY_MANAGER_RESULT_RELEASE);
-                }
-            }
-            else
-            {
-                ESP_LOGE("Display_Manager_Task", "RELEASING ERROR -> POWER_OFF");
-                display_manager.state = DISPLAY_MANAGER_POWER_OFF;   
+            } else {
+                display_manager.state = DISPLAY_MANAGER_POWER_OFF;
             }
             break;
+
         default:
-            ESP_LOGE("Display_Manager_Task", "STATE: UNDEFINED");
             display_manager.state = DISPLAY_MANAGER_POWER_OFF;
             break;
         }
-         vTaskDelay(pdMS_TO_TICKS(10));  // small delay is always healthy  
+
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
-esp_err_t DisplayManager_Requesting(void)
+/*============================== Private Functions ==============================*/
+
+static esp_err_t DisplayManager_Requesting(void)
 {
-    esp_err_t result = ESP_FAIL;
+    ESP_LOGI("DisplayManager_Requesting", "Initializing LCD & LVGL");
 
-       ESP_LOGI("DisplayManager_Request", "Initializing SPI bus for LCD");
+    // SPI init
+    spi_bus_config_t buscfg = {
+        .sclk_io_num = EXAMPLE_PIN_NUM_SCLK,
+        .mosi_io_num = EXAMPLE_PIN_NUM_MOSI,
+        .miso_io_num = EXAMPLE_PIN_NUM_MISO,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = EXAMPLE_LCD_H_RES * 80 * sizeof(uint16_t),
+    };
+    ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
-        spi_bus_config_t buscfg = {
-            .sclk_io_num = EXAMPLE_PIN_NUM_SCLK,
-            .mosi_io_num = EXAMPLE_PIN_NUM_MOSI,
-            .miso_io_num = EXAMPLE_PIN_NUM_MISO,
-            .quadwp_io_num = -1,
-            .quadhd_io_num = -1,
-            .max_transfer_sz = EXAMPLE_LCD_H_RES * 80 * sizeof(uint16_t),
-        };
-        ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &buscfg, SPI_DMA_CH_AUTO));
+    esp_lcd_panel_io_handle_t io_handle = NULL;
+    esp_lcd_panel_io_spi_config_t io_config = {
+        .dc_gpio_num = EXAMPLE_PIN_NUM_LCD_DC,
+        .cs_gpio_num = EXAMPLE_PIN_NUM_LCD_CS,
+        .pclk_hz = EXAMPLE_LCD_PIXEL_CLOCK_HZ,
+        .lcd_cmd_bits = EXAMPLE_LCD_CMD_BITS,
+        .lcd_param_bits = EXAMPLE_LCD_PARAM_BITS,
+        .spi_mode = 0,
+        .trans_queue_depth = 10,
+    };
+    ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_HOST, &io_config, &io_handle));
+    display_manager.panel_io_handle = io_handle;
 
-        ESP_LOGI("DisplayManager_Request", "Installing LCD panel IO driver");
+    // Panel driver
+    esp_lcd_panel_handle_t panel_handle = NULL;
+    esp_lcd_panel_dev_config_t panel_config = {
+        .reset_gpio_num = EXAMPLE_PIN_NUM_LCD_RST,
+        .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_BGR,
+        .bits_per_pixel = 16,
+    };
+    ESP_ERROR_CHECK(esp_lcd_new_panel_ili9341(io_handle, &panel_config, &panel_handle));
+    display_manager.panel_handle = panel_handle;
 
-        esp_lcd_panel_io_handle_t io_handle = NULL;
-        esp_lcd_panel_io_spi_config_t io_config = {
-            .dc_gpio_num = EXAMPLE_PIN_NUM_LCD_DC,
-            .cs_gpio_num = EXAMPLE_PIN_NUM_LCD_CS,
-            .pclk_hz = EXAMPLE_LCD_PIXEL_CLOCK_HZ,
-            .lcd_cmd_bits = EXAMPLE_LCD_CMD_BITS,
-            .lcd_param_bits = EXAMPLE_LCD_PARAM_BITS,
-            .spi_mode = 0,
-            .trans_queue_depth = 10,
-        };
-        ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_HOST, &io_config, &io_handle));
+    ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
+    ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
+    ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
+    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 
-        ESP_LOGI("DisplayManager_Request", "Creating LCD panel driver");
+    gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, EXAMPLE_LCD_BK_LIGHT_ON_LEVEL);
 
-        esp_lcd_panel_handle_t panel_handle = NULL;
-        esp_lcd_panel_dev_config_t panel_config = {
-            .reset_gpio_num = EXAMPLE_PIN_NUM_LCD_RST,
-            .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_BGR,
-            .bits_per_pixel = 16,
-        };
-        // "Install ILI9341 panel driver");
-        ESP_ERROR_CHECK(esp_lcd_new_panel_ili9341(io_handle, &panel_config, &panel_handle));
-
-        // Initialize panel
-        ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
-        ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
-        ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
-        ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
-
-        ESP_LOGI("DisplayManager_Request", "Turning on LCD backlight");
-        gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, EXAMPLE_LCD_BK_LIGHT_ON_LEVEL);
-
-        ESP_LOGI("DisplayManager_Request", "Initializing LVGL");
+    if (!display_manager.lvgl_initialized) {
         lv_init();
+        display_manager.lvgl_initialized = true;
+    }
 
-        // Create LVGL display and buffers
-        display_manager.lvgl_display = lv_display_create(EXAMPLE_LCD_H_RES, EXAMPLE_LCD_V_RES);
+    size_t buf_size = EXAMPLE_LCD_H_RES * EXAMPLE_LVGL_DRAW_BUF_LINES * sizeof(lv_color16_t);
+    display_manager.lvgl_buf1 = heap_caps_malloc(buf_size, MALLOC_CAP_DMA);
+    display_manager.lvgl_buf2 = heap_caps_malloc(buf_size, MALLOC_CAP_DMA);
+    assert(display_manager.lvgl_buf1 && display_manager.lvgl_buf2);
 
-        size_t draw_buffer_sz = EXAMPLE_LCD_H_RES * EXAMPLE_LVGL_DRAW_BUF_LINES * sizeof(lv_color16_t);
-        void *buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_DMA);
-        void *buf2 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_DMA);
-        assert(buf1 && buf2);
+    lv_display_t *disp = lv_display_create(EXAMPLE_LCD_H_RES, EXAMPLE_LCD_V_RES);
+    display_manager.lvgl_display = disp;
+    lv_display_set_buffers(disp, display_manager.lvgl_buf1, display_manager.lvgl_buf2, buf_size, LV_DISPLAY_RENDER_MODE_PARTIAL);
+    lv_display_set_user_data(disp, panel_handle);
+    lv_display_set_flush_cb(disp, example_lvgl_flush_cb);
 
-        lv_display_set_buffers(display_manager.lvgl_display, buf1, buf2, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
-        lv_display_set_user_data(display_manager.lvgl_display, panel_handle);
-        lv_display_set_color_format(display_manager.lvgl_display, LV_COLOR_FORMAT_RGB565);
-        lv_display_set_flush_cb(display_manager.lvgl_display, example_lvgl_flush_cb);
+    // LVGL tick
+    const esp_timer_create_args_t tick_args = {
+        .callback = &example_increase_lvgl_tick,
+        .name = "lvgl_tick"
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&tick_args, &display_manager.lvgl_tick_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(display_manager.lvgl_tick_timer, EXAMPLE_LVGL_TICK_PERIOD_MS * 1000));
 
-        // LVGL tick timer
-        const esp_timer_create_args_t lvgl_tick_timer_args = {
-            .callback = &example_increase_lvgl_tick,
-            .name = "lvgl_tick"
-        };
-        esp_timer_handle_t lvgl_tick_timer = NULL;
-        ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
-        ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, EXAMPLE_LVGL_TICK_PERIOD_MS * 1000));
+    // Flush done callback
+    const esp_lcd_panel_io_callbacks_t cbs = {
+        .on_color_trans_done = example_notify_lvgl_flush_ready,
+    };
+    ESP_ERROR_CHECK(esp_lcd_panel_io_register_event_callbacks(io_handle, &cbs, disp));
 
-        // Register flush done callback
-        const esp_lcd_panel_io_callbacks_t cbs = {
-            .on_color_trans_done = example_notify_lvgl_flush_ready,
-        };
-        ESP_ERROR_CHECK(esp_lcd_panel_io_register_event_callbacks(io_handle, &cbs, display_manager.lvgl_display));
+    // Touch controller
+    esp_lcd_panel_io_handle_t tp_io_handle = NULL;
+    esp_lcd_panel_io_spi_config_t tp_io_config = ESP_LCD_TOUCH_IO_SPI_XPT2046_CONFIG(EXAMPLE_PIN_NUM_TOUCH_CS);
+    ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_HOST, &tp_io_config, &tp_io_handle));
+    display_manager.touch_io_handle = tp_io_handle;
 
-        ESP_LOGI("DisplayManager_Request", "LCD and LVGL successfully requested");
-    
-            // ---------- TOUCH SETUP ----------
-        ESP_LOGI("DisplayManager_Request", "Initializing touch controller XPT2046");
+    esp_lcd_touch_handle_t tp = NULL;
+    esp_lcd_touch_config_t tp_cfg = {
+        .x_max = EXAMPLE_LCD_H_RES,
+        .y_max = EXAMPLE_LCD_V_RES,
+        .rst_gpio_num = -1,
+        .int_gpio_num = -1,
+        .flags = {.swap_xy = 0, .mirror_x = 0, .mirror_y = CONFIG_EXAMPLE_LCD_MIRROR_Y},
+    };
+    ESP_ERROR_CHECK(esp_lcd_touch_new_spi_xpt2046(tp_io_handle, &tp_cfg, &tp));
+    display_manager.touch_handle = tp;
 
-        // Create SPI IO for touch (shares the same SPI bus)
-        esp_lcd_panel_io_handle_t tp_io_handle = NULL;
-        esp_lcd_panel_io_spi_config_t tp_io_config =
-            ESP_LCD_TOUCH_IO_SPI_XPT2046_CONFIG(EXAMPLE_PIN_NUM_TOUCH_CS);
+    lv_indev_t *indev = lv_indev_create();
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_display(indev, disp);
+    lv_indev_set_user_data(indev, tp);
+    lv_indev_set_read_cb(indev, example_lvgl_touch_cb);
 
-        ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_HOST, &tp_io_config, &tp_io_handle));
+    // Start LVGL handling task
+    if (display_manager.lvgl_task_handle == NULL) {
+        xTaskCreate(example_lvgl_port_task, "LVGL", EXAMPLE_LVGL_TASK_STACK_SIZE, NULL, EXAMPLE_LVGL_TASK_PRIORITY, &display_manager.lvgl_task_handle);
+    }
 
-        esp_lcd_touch_config_t tp_cfg = {
-            .x_max = EXAMPLE_LCD_H_RES,
-            .y_max = EXAMPLE_LCD_V_RES,
-            .rst_gpio_num = -1,
-            .int_gpio_num = -1,
-            .flags = {
-                .swap_xy = 0,
-                .mirror_x = 0,
-                .mirror_y = CONFIG_EXAMPLE_LCD_MIRROR_Y,
-            },
-        };
-
-        esp_lcd_touch_handle_t tp = NULL;
-        ESP_ERROR_CHECK(esp_lcd_touch_new_spi_xpt2046(tp_io_handle, &tp_cfg, &tp));
-
-        // Register LVGL input device for touch
-        static lv_indev_t *indev;
-        indev = lv_indev_create();
-        lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
-        lv_indev_set_display(indev, display_manager.lvgl_display);
-        lv_indev_set_user_data(indev, tp);
-        lv_indev_set_read_cb(indev, example_lvgl_touch_cb);
-
-        ESP_LOGI("DisplayManager_Request", "Touch controller initialized");
-    
-    result = ESP_OK;
-
-    return result;
+    return ESP_OK;
 }
 
-esp_err_t DisplayManager_Releasing(void)
+static esp_err_t DisplayManager_Releasing(void)
 {
-    esp_err_t result = ESP_FAIL;
-    
-    ESP_LOGI("DisplayManager_Releasing", "Releasing LCD and freeing resources...");
+    ESP_LOGI("DisplayManager_Releasing", "Releasing display resources...");
 
-    // --- 1. Stop the LVGL task ---
-    // If you created a task for LVGL updates, delete it here
-    if (display_manager.lvgl_task_handle != NULL) {
+    if (display_manager.lvgl_tick_timer) {
+        esp_timer_stop(display_manager.lvgl_tick_timer);
+        esp_timer_delete(display_manager.lvgl_tick_timer);
+        display_manager.lvgl_tick_timer = NULL;
+    }
+
+    if (display_manager.lvgl_task_handle) {
         vTaskDelete(display_manager.lvgl_task_handle);
         display_manager.lvgl_task_handle = NULL;
-        ESP_LOGI("DisplayManager_Releasing", "LVGL task deleted");
-    }
-/*
-    // --- 2. Deinit touch controller ---
-    if (touch_handle) {
-        esp_lcd_touch_del(touch_handle);
-        touch_handle = NULL;
-        ESP_LOGI("DisplayManager_Releasing", "Touch controller released");
     }
 
-    // --- 3. Delete LVGL display driver and flush callback ---
-    if (lv_display_get_default()) {
-        lv_display_delete(lv_display_get_default());
-        ESP_LOGI("DisplayManager_Releasing", "LVGL display driver deleted");
+    if (display_manager.panel_handle) {
+        esp_lcd_panel_del(display_manager.panel_handle);
+        display_manager.panel_handle = NULL;
     }
 
-    
-    // --- 4. Delete panel handle ---
-    if (panel_handle) {
-        esp_lcd_panel_del(panel_handle);
-        panel_handle = NULL;
-        ESP_LOGI("DisplayManager_Releasing", "Panel handle deleted");
+    if (display_manager.panel_io_handle) {
+        esp_lcd_panel_io_del(display_manager.panel_io_handle);
+        display_manager.panel_io_handle = NULL;
     }
 
-    // --- 5. Delete SPI IO handle ---
-    if (io_handle) {
-        esp_lcd_panel_io_del(io_handle);
-        io_handle = NULL;
-        ESP_LOGI("DisplayManager_Releasing", "SPI IO handle deleted");
-    }
-*/
-    // --- 6. Deinitialize the SPI bus ---
     spi_bus_free(LCD_HOST);
-    ESP_LOGI("DisplayManager_Releasing", "SPI bus deinitialized");
-
-    // --- 7. Turn off backlight ---
     gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, 0);
-    ESP_LOGI("DisplayManager_Releasing", "Backlight turned off");
 
+    free(display_manager.lvgl_buf1);
+    free(display_manager.lvgl_buf2);
 
-
-    ESP_LOGI("DisplayManager_Releasing", "SPI bus deinitialized successfully");
-    
-    return result ;
+    ESP_LOGI("DisplayManager_Releasing", "Display fully released");
+    return ESP_OK;
 }
 
-
-
-uint32_t DisplayManagerSignalWait(uint32_t signal, uint32_t timeout)
+static uint32_t DisplayManagerSignalWait(uint32_t signal, uint32_t timeout_ms)
 {
-    uint32_t notifiedValue = 0;
+ uint32_t notifiedValue = 0;
+    TickType_t ticks;
 
-    //ESP_LOGI("Display_Manager_SignalWait", "Waiting for signal %" PRIu32 " with timeout %" PRIu32 " ms", signal, timeout);
-    printf("Waiting for signal %" PRIu32 " with timeout %" PRIu32 " ms\n", signal, timeout);
-    xTaskNotifyWait(0x00, signal, &notifiedValue, pdMS_TO_TICKS(timeout));
+    if (timeout_ms == portMAX_DELAY) {
+        ticks = portMAX_DELAY;
+    } else {
+        ticks = pdMS_TO_TICKS(timeout_ms);
+        if (ticks == 0) ticks = 1; // avoid zero wait if ms < tick period
+    }
+
+    // Wait for notification bits (clear on exit specified by 'signal')
+    xTaskNotifyWait(0x00, signal, &notifiedValue, ticks);
 
     return notifiedValue;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

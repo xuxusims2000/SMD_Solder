@@ -24,6 +24,7 @@
 
 #include "ILI9341_screen.h"
 #include "Screen_design.h"
+#include "ui.h"
 
 
 
@@ -64,7 +65,7 @@
 typedef enum {
     DISPLAY_MANAGER_UNDEFINED, 
     DISPLAY_MANAGER_POWER_OFF, 
-    DISPLAY_MANAGER_RQUESTING,
+    DISPLAY_MANAGER_REQUESTING,
     DISPLAY_MANAGER_REQUESTED,
     DISPLAY_MANAGER_START,
     DISPLAY_MANAGER_RELEASING

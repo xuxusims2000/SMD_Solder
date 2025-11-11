@@ -65,7 +65,7 @@ void Display_Manager_Test_Task_1(void *pvParameters){
     
           ESP_LOGI("Display_Manager_Test_Task", "Start OK");
     
-          //vTaskDelay(pdMS_TO_TICKS(1000 *30)); // Delay for 1000 mseconds
+          vTaskDelay(pdMS_TO_TICKS(1000 *60)); // Delay for 1000 mseconds
           
           DisplayManager_Stop();
           vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
@@ -87,14 +87,21 @@ void Display_Manager_Test_Task_1(void *pvParameters){
           }
 }
 
-uint32_t TestDisplay_Manager_SignalWait(uint32_t signal, uint32_t timeout)
+uint32_t TestDisplay_Manager_SignalWait(uint32_t signal, uint32_t timeout_ms)
 {
-    uint32_t notifiedValue = 0;
+uint32_t notifiedValue = 0;
+    TickType_t ticks;
 
-    printf("Waiting for signal %" PRIu32 " with timeout %" PRIu32 " ms\n", signal, timeout);
+    printf("Waiting for signal %" PRIu32 " with timeout %" PRIu32 " ms\n", signal, timeout_ms);
 
-    xTaskNotifyWait(0x00, signal, &notifiedValue, pdMS_TO_TICKS(timeout));
+    if (timeout_ms == portMAX_DELAY) {
+        ticks = portMAX_DELAY;
+    } else {
+        ticks = pdMS_TO_TICKS(timeout_ms);
+        if (ticks == 0) ticks = 1;
+    }
 
+    xTaskNotifyWait(0x00, signal, &notifiedValue, ticks);
     return notifiedValue;
 }
 
