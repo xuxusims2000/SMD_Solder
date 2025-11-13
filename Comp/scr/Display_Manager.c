@@ -168,9 +168,9 @@ void Display_Manager_Task(void *pvParameters)
         case DISPLAY_MANAGER_START:
             ESP_LOGI("Display_Manager_Task", "STATE: START");
             //_lock_acquire(&lvgl_api_lock2);
-            ESP_LOGI("Display_Manager_Task", "Calling ui_init_sql()...");
-            lv_async_call((lv_async_cb_t)ui_init_sql, NULL);
-            ESP_LOGI("Display_Manager_Task", "ui_init_sql() returned");
+            ESP_LOGI("Display_Manager_Task", "Calling ui_init()...");
+            lv_async_call((lv_async_cb_t)ui_init, NULL);
+            ESP_LOGI("Display_Manager_Task", "ui_init() returned");
             //_lock_release(&lvgl_api_lock2);
             vTaskDelay(pdMS_TO_TICKS(10)); // feeds watchdog
 

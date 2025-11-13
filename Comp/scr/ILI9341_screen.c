@@ -266,7 +266,7 @@ void Test_main_screen(void)
     _lock_acquire(&lvgl_api_lock);
     //example_lvgl_demo_ui(display);
     //lvgl_main_screen(display);
-    ui_init_sql();
+    //ui_init_sql();
     _lock_release(&lvgl_api_lock);
 }
 

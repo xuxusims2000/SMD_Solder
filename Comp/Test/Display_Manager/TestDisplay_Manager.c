@@ -65,9 +65,13 @@ void Display_Manager_Test_Task_1(void *pvParameters){
     
           ESP_LOGI("Display_Manager_Test_Task", "Start OK");
     
-          vTaskDelay(pdMS_TO_TICKS(1000 *60)); // Delay for 1000 mseconds
+          while(1)
+          {
+                vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
+          } 
+          //vTaskDelay(pdMS_TO_TICKS(1000 *60)); // Delay for 1000 mseconds
           
-          DisplayManager_Stop();
+          /*DisplayManager_Stop();
           vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
           TestDisplay_Manager_SignalWait( TEST_DISPLAY_MANAGER_SIGNAL_STOP_COMPLETE,  portMAX_DELAY);
           ESP_LOGI("Display_Manager_Test_Task", "Stop OK");
@@ -78,7 +82,7 @@ void Display_Manager_Test_Task_1(void *pvParameters){
           ESP_LOGI("Display_Manager_Test_Task", "Release OK");
     
           ESP_LOGI("Display_Manager_Test_Task", "-------------END----------------");
-    
+         */
         
      }
         while(1)
