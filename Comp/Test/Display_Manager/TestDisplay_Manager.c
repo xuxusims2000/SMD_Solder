@@ -42,6 +42,8 @@ void Test_display_manager_1(){
 
 void Display_Manager_Test_Task_1(void *pvParameters){
 
+    float temp = 50.0;
+
     ESP_LOGI("Display_Manager_Test_Task", "--------------Started-----------------");
     
     /*callbacs*/
@@ -64,10 +66,21 @@ void Display_Manager_Test_Task_1(void *pvParameters){
           TestDisplay_Manager_SignalWait( TEST_DISPLAY_MANAGER_SIGNAL_START_COMPLETE,  portMAX_DELAY);
     
           ESP_LOGI("Display_Manager_Test_Task", "Start OK");
+          vTaskDelay(pdMS_TO_TICKS(5000)); // Delay for 1000 mseconds
     
           while(1)
           {
+            for (uint8_t j = 0; j < 10; j++) {
+                temp = temp  +  5; // Example temperature value
+                ESP_LOGI("Display_Manager_Test_Task", "Setting temperature to: %.2f °C loop %d", temp, j);
+                DisplayManager_SetTemperature(temp);
                 vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
+
+                
+            }   
+            temp = 60.0; // Reset temperature
+            
+            vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
           } 
           //vTaskDelay(pdMS_TO_TICKS(1000 *60)); // Delay for 1000 mseconds
           
@@ -85,6 +98,64 @@ void Display_Manager_Test_Task_1(void *pvParameters){
          */
         
      }
+        while(1)
+          {
+                vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
+          }
+}
+
+void Display_Manager_Test_Task_2(void *pvParameters)
+{
+    
+    ESP_LOGI("Display_Manager_Test_Task", "--------------Started-----------------");
+    
+    /*callbacs*/
+        
+        testDisplayManager.config.callbacks.OperationCompleteCallback = TestDisplayManager_OperationCompleteCallback;
+    for(uint8_t i=0; i<2; i++){
+                
+          ESP_LOGI("Display_Manager_Task", "Time Test Iteration: %d", i);
+          // Request display manager
+          DisplayManager_Request(&testDisplayManager.config);
+          vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
+    
+          TestDisplay_Manager_SignalWait( TEST_DISPLAY_MANAGER_SIGNAL_REQUEST_COMPLETE,  portMAX_DELAY);
+    
+          ESP_LOGI(" Display_Manager_Test_Task", "Request OK");
+    
+          DisplayManager_Start();
+          vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
+    
+          TestDisplay_Manager_SignalWait( TEST_DISPLAY_MANAGER_SIGNAL_START_COMPLETE,  portMAX_DELAY);
+    
+          ESP_LOGI("Display_Manager_Test_Task", "Start OK");
+          vTaskDelay(pdMS_TO_TICKS(5000)); // Delay for 1000 mseconds // hauria de ser amb un semafor
+    
+          while(1)
+          {
+           
+
+                
+            }   
+            
+            vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
+          } 
+          //vTaskDelay(pdMS_TO_TICKS(1000 *60)); // Delay for 1000 mseconds
+          
+          /*DisplayManager_Stop();
+          vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
+          TestDisplay_Manager_SignalWait( TEST_DISPLAY_MANAGER_SIGNAL_STOP_COMPLETE,  portMAX_DELAY);
+          ESP_LOGI("Display_Manager_Test_Task", "Stop OK");
+    
+          DisplayManager_Release();
+          vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
+          TestDisplay_Manager_SignalWait( TEST_DISPLAY_MANAGER_SIGNAL_RELEASE_COMPLETE,  portMAX_DELAY);
+          ESP_LOGI("Display_Manager_Test_Task", "Release OK");
+    
+          ESP_LOGI("Display_Manager_Test_Task", "-------------END----------------");
+         */
+        
+     
         while(1)
           {
                 vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds

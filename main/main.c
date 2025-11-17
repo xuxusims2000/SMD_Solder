@@ -1,15 +1,22 @@
 
 #include "main.h"
 
+typedef struct {
 
+    SolderingManagerState   state;
+    TimerHandle_t           Manager_SMD_UpdateTemperature_Timer;
 
-void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer);
+    float                   temperature;
+ 
+} Manager_SMD;
+
 
 Manager_SMD mainSolder = {
     .state = POWER_OFF,
     .Manager_SMD_UpdateTemperature_Timer = NULL
 };
 
+void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer);
 
 
 

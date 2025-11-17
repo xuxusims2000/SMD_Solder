@@ -39,12 +39,7 @@ typedef enum {
     REALISING
 } SolderingManagerState;
 
-typedef struct {
 
-    SolderingManagerState state;
-    TimerHandle_t Manager_SMD_UpdateTemperature_Timer;
- 
-} Manager_SMD;
 
 
 

@@ -37,6 +37,10 @@ typedef struct {
 
     void*                            lvgl_buf1;
     void*                            lvgl_buf2;
+
+    lv_obj_t*                        current_screen;
+
+    float                           temperature;
 } DisplayManager_t;
 
 static DisplayManager_t display_manager = {
@@ -99,6 +103,8 @@ esp_err_t DisplayManager_Request(DisplayManager_Configuration_t* config)
 
 esp_err_t DisplayManager_Start(void)
 {
+ 
+    
     if (display_manager.state != DISPLAY_MANAGER_REQUESTED) {
         ESP_LOGE("DisplayManager_Start", "Invalid state (%d)", display_manager.state);
         return ESP_FAIL;
@@ -110,7 +116,7 @@ esp_err_t DisplayManager_Start(void)
 
 void DisplayManager_Stop(void)
 {
-    if (display_manager.state == DISPLAY_MANAGER_START) {
+    if (display_manager.state == DISPLAY_MANAGER_MAIN_SCREEN) {
         xTaskNotify(display_manager.taskHandle, DISPLAY_MANAGER_SIGNAL_STOP, eSetBits);
         ESP_LOGI("DisplayManager_Stop", "Stopping display manager");
     } else {
@@ -123,6 +129,21 @@ esp_err_t DisplayManager_Release(void)
     xTaskNotify(display_manager.taskHandle, DISPLAY_MANAGER_SIGNAL_RELEASE, eSetBits);
     xSemaphoreGive(display_manager.xSemaphore);
     return ESP_OK;
+}
+
+esp_err_t DisplayManager_SetTemperature(float temperature)
+{
+    esp_err_t result = ESP_FAIL;
+
+    display_manager.temperature = temperature;
+
+    static char temp_buffer[16];
+    snprintf(temp_buffer, sizeof(temp_buffer), "%.2f °C", temperature);
+    lv_label_set_text(ui_varTemp, temp_buffer);
+
+    result = ESP_OK;
+
+    return result;
 }
 
 /*============================== Main Task ==============================*/
@@ -157,22 +178,45 @@ void Display_Manager_Task(void *pvParameters)
         case DISPLAY_MANAGER_REQUESTED:
             signal = DisplayManagerSignalWait(DISPLAY_MANAGER_SIGNAL_START | DISPLAY_MANAGER_SIGNAL_RELEASE, portMAX_DELAY);
             if (signal & DISPLAY_MANAGER_SIGNAL_START) {
-                display_manager.state = DISPLAY_MANAGER_START;
+                display_manager.state = DISPLAY_MANAGER_MAIN_SCREEN;
                 if (display_manager.config.callbacks.OperationCompleteCallback)
                     display_manager.config.callbacks.OperationCompleteCallback(DISPLAY_MANAGER_RESULT_START);
             } else if (signal & DISPLAY_MANAGER_SIGNAL_RELEASE) {
                 display_manager.state = DISPLAY_MANAGER_RELEASING;
             }
-            break;
 
-        case DISPLAY_MANAGER_START:
             ESP_LOGI("Display_Manager_Task", "STATE: START");
             //_lock_acquire(&lvgl_api_lock2);
             ESP_LOGI("Display_Manager_Task", "Calling ui_init()...");
             lv_async_call((lv_async_cb_t)ui_init, NULL);
             ESP_LOGI("Display_Manager_Task", "ui_init() returned");
             //_lock_release(&lvgl_api_lock2);
-            vTaskDelay(pdMS_TO_TICKS(10)); // feeds watchdog
+            vTaskDelay(pdMS_TO_TICKS(500)); // feeds watchdog  //shold do a semafor
+
+            lv_label_set_text(ui_varTemp, "15 °C");
+
+
+            break;
+
+        case DISPLAY_MANAGER_MAIN_SCREEN:
+
+            //display_manager.current_screen = lv_scr_act();
+        lv_obj_t * current_screen = lv_scr_act(); // Get the active screen just once
+
+        if (current_screen == ui_Screen1) {
+            ESP_LOGI("Display_Manager_Task", "STATE: Screen 1 (Home)");
+        } else if (current_screen == ui_Screen2) {
+            // Now you can specifically handle when Screen 2 is active
+            ESP_LOGI("Display_Manager_Task", "STATE: Screen 2 (Settings)");
+        } else {
+            // This handles any other screen that might exist, or if the screen is NULL
+            ESP_LOGW("Display_Manager_Task", "STATE: Unknown Screen active: %p", (void*)current_screen);
+        }
+             
+            /* La idea es fer que en fucnio de la pantalla que estigui 
+            actualitzi els valors que siguin necesaris
+                La pregunta es faig un altre estat? com gestion aquests estats
+                - podria fer que sactualitzes tot tot el rato ?*/
 
             signal = DisplayManagerSignalWait(DISPLAY_MANAGER_SIGNAL_STOP, portMAX_DELAY);
             if (signal & DISPLAY_MANAGER_SIGNAL_STOP) {
@@ -306,7 +350,7 @@ static esp_err_t DisplayManager_Requesting(void)
     // Start LVGL handling task
     if (display_manager.lvgl_task_handle == NULL) {
         xTaskCreate(example_lvgl_port_task, "LVGL", EXAMPLE_LVGL_TASK_STACK_SIZE, NULL, EXAMPLE_LVGL_TASK_PRIORITY, &display_manager.lvgl_task_handle);
-    }
+    } 
 
     return ESP_OK;
 }
