@@ -157,8 +157,8 @@ void SMD_Manager_Test_Task_1(void *pvParameters){
          
     for ( uint8_t i = 0; i < 2; i++ ) {
 
-        DisplayManager_Request(&testDisplayManager.config);
-        Temp_Sensing_Request(&testTempSensing.config);
+        //DisplayManager_Request(&testDisplayManager.config);
+        //Temp_Sensing_Request(&testTempSensing.config);
      
         while(1)
           {

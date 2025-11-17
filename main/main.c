@@ -1,6 +1,26 @@
 
 #include "main.h"
 
+typedef enum {
+    MAINAPP_POWER_OFF,
+    MAINAPP_INITIALIZE_AND_START,
+    MAINAPP_WAIT,
+    MAINAPP_STOP_RELEASE_AND_RESET
+} SolderingManagerState;
+
+typedef struct MainApp_s
+{
+    SolderingManagerState   state;
+    esp_err_t               result;
+
+    //SMD_Manager_Configuration_t   SMD_ManagerConfig;
+
+} MainApp_t;
+
+MainApp_t mainApp = {
+    .state = POWER_OFF
+};
+
 typedef struct {
 
     SolderingManagerState   state;
@@ -16,6 +36,7 @@ Manager_SMD mainSolder = {
     .Manager_SMD_UpdateTemperature_Timer = NULL
 };
 
+static esp_err_t MainApp_InitializeAndStart();
 void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer);
 
 
@@ -28,25 +49,43 @@ void app_main(void)
   test_function();
     
   #else
-    esp_err_t result = ESP_FAIL;
 
-    esp_log_level_set("MAIN", ESP_LOG_INFO); // Set log level for MAIN tag
-    ESP_LOGI("MAIN", "Starting Manager_SMD Task");
+    while (1) {
 
-//shold do all the initializations here
+        switch (mainApp.state)
+        {
+            case MAINAPP_POWER_OFF:
+                mainApp.state = MAINAPP_INITIALIZE_AND_START;
+                break;
+            
+            case MAINAPP_INITIALIZE_AND_START:
 
-    // Temperature Sensor Initialization
-    Temp_Sensing_Init();
-    // Temperature Control Initialization
-    Temp_Ctrl_Init();
-    // Display Initialization
-    Display_Init();
+                result = MainApp_InitializeAndStart();
+            
+            default:
+                break;
+            }
+            ESP_LOGI("MAIN", "Starting Soldering Manager...");
+            vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 milliseconds
+            break;
+    }
 
     xTaskCreate(Manager_SMD_Task, "Manager_SMD Task", 2048, NULL, 1, NULL);
 
     #endif
 }
 
+esp_err_t MainApp_InitializeAndStart(){
+
+    esp_err_t result = ESP_FAIL;
+
+    // Initialize SMD Manager
+    
+    
+    result = SMD_Manager_Request(&mainApp.SMD_ManagerConfig);
+
+    return result;
+}
 
 
 
