@@ -5,6 +5,7 @@
 #include "TestTemp_Sensing.h"
 #include "TestDisplay_Manager.h"
 
+
 TaskHandle_t task1Handle = NULL;
 TaskHandle_t task2Handle = NULL;
 
@@ -12,9 +13,6 @@ void Test_task_manaement_signals(void);
 void task1(void *pvParameters);
 void task2(void *pvParameters);
 
-void Test_smd_manager_1(void);
-void SMD_Manager_Test_Task_1(void *pvParameters);
-TaskHandle_t testSMDManagerTaskHandle = NULL;
 
 void test_function() {
     // Test implementation goes here
@@ -35,7 +33,7 @@ void test_function() {
 
 
     /*----------Module SMD Manager----------------------*/
-    Test_smd_manager_1();
+    //Test_smd_manager_1();
 
     
     //Test_PID_control_();
@@ -133,60 +131,7 @@ void task2(void *pvParameters){
     }
 }
 
-void Test_smd_manager_1(void){
-
-    // Example test code for SMD Manager
-    printf("Starting SMD Manager test...\n");
-
-    // Temperature Sensor Initialization
-    Temp_Sensing_Init();
-
-    // Display Initialization
-    Display_Init();
-
-    /* Create and start 'test task thread'*/
-    xTaskCreate(SMD_Manager_Test_Task_1, "SMD_Manager_Test_Task_1", 2048, NULL, 1, &testSMDManagerTaskHandle);
 
 
-    printf("SMD Manager test completed.\n");
-}
 
-void SMD_Manager_Test_Task_1(void *pvParameters){
 
-    ESP_LOGI("SMD_Manager_Test_Task", "--------------Started-----------------");
-         
-    for ( uint8_t i = 0; i < 2; i++ ) {
-
-        //DisplayManager_Request(&testDisplayManager.config);
-        //Temp_Sensing_Request(&testTempSensing.config);
-     
-        while(1)
-          {
-                
-            vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
-          }
-        }
-}
-
-void Test_SMD_Manager_SignalWait(uint32_t signal, uint32_t timeout_ms)
-{
- uint32_t notifiedValue = 0;
-    TickType_t ticks;
-
-    if (timeout_ms == portMAX_DELAY) {
-        ticks = portMAX_DELAY;
-    } else {
-        ticks = pdMS_TO_TICKS(timeout_ms);
-        if (ticks == 0) ticks = 1; // avoid zero wait if ms < tick period
-    }
-
-    // Wait for notification bits (clear on exit specified by 'signal')
-    xTaskNotifyWait(0x00, signal, &notifiedValue, ticks);
-
-    return notifiedValue;
-}   
-
-void Test_SMD_Manager_OperationCompleteCallback(SMDManager_Result_t result)
-{
-    ESP_LOGI("SMD_Manager_OperationCompleteCallback", "Operation completed with result: %d", result);
-}

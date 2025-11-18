@@ -15,29 +15,10 @@
 //#include "driver/gpio.h"
 #include "driver/ledc.h"
 
-#include "Temp_Ctrl.h"
-#include "Temp_Sensing.h"
-#include "PWM_Config.h"
-#include "ILI9341_screen.h"
 #include "Test.h"
+#include "SMD_Manager.h"
 
-#include "driver/spi_master.h"
-#include "lvgl.h"
 
-void Manager_SMD_Requesting(void);
-
-void Manager_SMD_Task(void );
-
-esp_err_t Manager_SMD_Starting(void);
-
-typedef enum {
-    POWER_OFF,
-    REQUESTING,
-    REQUESTED,
-    SOLDERING,
-    RELAXED,  
-    REALISING
-} SolderingManagerState;
 
 
 

@@ -1,12 +1,12 @@
 
 #include "main.h"
 
-typedef enum {
+typedef enum MainApp_State_e{
     MAINAPP_POWER_OFF,
     MAINAPP_INITIALIZE_AND_START,
     MAINAPP_WAIT,
     MAINAPP_STOP_RELEASE_AND_RESET
-} SolderingManagerState;
+} MainAppState_t;
 
 typedef struct MainApp_s
 {
@@ -21,23 +21,12 @@ MainApp_t mainApp = {
     .state = POWER_OFF
 };
 
-typedef struct {
 
-    SolderingManagerState   state;
-    TimerHandle_t           Manager_SMD_UpdateTemperature_Timer;
-
-    float                   temperature;
- 
-} Manager_SMD;
-
-
-Manager_SMD mainSolder = {
-    .state = POWER_OFF,
-    .Manager_SMD_UpdateTemperature_Timer = NULL
-};
 
 static esp_err_t MainApp_InitializeAndStart();
 void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer);
+
+static void MainApp_SMD_Manager_OperationCompleteCallback(SMD_Manager_Result_t result);
 
 
 
@@ -78,6 +67,8 @@ void app_main(void)
 esp_err_t MainApp_InitializeAndStart(){
 
     esp_err_t result = ESP_FAIL;
+
+    mainApp.SMD_ManagerConfig.callbacks.OperationCompleteCallback = MainApp_SMD_Manager_OperationCompleteCallback; // Assign appropriate callback
 
     // Initialize SMD Manager
     
@@ -217,5 +208,10 @@ void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer){
 
     //Manager_SMD_SignalSet(MANAGER_SMD_SIGNAL_UPDATE_TEMPERATURE);
 
+}
+
+void MainApp_SMD_Manager_OperationCompleteCallback(SMD_Manager_Result_t result){
+
+    ESP_LOGI("MainApp_SMD_Manager_OperationCompleteCallback", "Operation Complete Callback executed with result: %d", result);
 
 }
