@@ -13,7 +13,7 @@ typedef struct MainApp_s
     SolderingManagerState   state;
     esp_err_t               result;
 
-    //SMD_Manager_Configuration_t   SMD_ManagerConfig;
+    SMD_Manager_Configuration_t   SMD_ManagerConfig;
 
 } MainApp_t;
 
