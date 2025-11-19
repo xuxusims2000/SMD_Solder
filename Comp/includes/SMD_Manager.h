@@ -9,6 +9,8 @@
 
 #include <stdint.h>
 #include <unistd.h>
+#include <sys/lock.h>
+#include <sys/param.h>
 #include "esp_log.h" 
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
@@ -16,18 +18,18 @@
 #include "freertos/semphr.h"
 #include "esp_err.h"
 
+#include "Display_Manager.h"
+#include "Temp_Sensing.h"
+#include "Temp_Ctrl.h"
+
+
+//Signal and Defines for the SMD Manager Module
 
 
 
-
-
-void Manager_SMD_Requesting(void);
-
-void Manager_SMD_Task(void );
-
-esp_err_t Manager_SMD_Starting(void);
 
 typedef enum {
+    UNDDEFINED,
     POWER_OFF,
     REQUESTING,
     REQUESTED,
@@ -36,7 +38,7 @@ typedef enum {
     REALISING
 } SolderingManagerState;
 
-typedef enum SMD_Manager_Result_e
+typedef enum SMDManager_Result_e
 {
 	DOSEMANAGER_RESULT_UNDEFINED,
 	DOSEMANAGER_RESULT_REQUEST,
@@ -44,22 +46,30 @@ typedef enum SMD_Manager_Result_e
 	DOSEMANAGER_RESULT_STOP,
 	DOSEMANAGER_RESULT_RELEASE,
 	DOSEMANAGER_RESULT_OPERATION_OK,
-} SMD_Manager_Result_t;
+} SMDManager_Result_t;
 
 
-typedef struct SMD_Manager_Callbacks_s
+typedef struct SMDManager_Callbacks_s
 {
-    void (*OperationCompleteCallback)(SMD_Manager_Result_t result);
+    void (*OperationCompleteCallback)(SMDManager_Result_t result);
     void (*ErrorCallback)(int errorCode);
     // Other callback function pointers...
-} SMD_Manager_Callbacks_t;
+} SMDManager_Callbacks_t;
 
-typedef struct SMD_Manager_Configuration_s
+typedef struct SMDManager_Configuration_s
 {
-    SMD_Manager_Callbacks_t callbacks;
-} SMD_Manager_Configuration_t;
+    SMDManager_Callbacks_t callbacks;
+} SMDManager_Configuration_t;
 
-esp_err_t SMD_Manager_Request (void);
+
+void SMDManager_Task(void *pvParameters);
+
+void SMDManager_Init(void);
+esp_err_t SMDManager_Request(SMDManager_Configuration_t* config);
+esp_err_t SMDManager_Start(void);
+esp_err_t SMDManager_Stop(void);
+esp_err_t SMDManager_Release(void);
+
 
 
 #endif // SMD_MANAGER_H

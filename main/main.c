@@ -13,7 +13,7 @@ typedef struct MainApp_s
     SolderingManagerState   state;
     esp_err_t               result;
 
-    SMD_Manager_Configuration_t   SMD_ManagerConfig;
+    SMDManager_Configuration_t   SMD_ManagerConfig;
 
 } MainApp_t;
 
@@ -24,9 +24,10 @@ MainApp_t mainApp = {
 
 
 static esp_err_t MainApp_InitializeAndStart();
-void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer);
+static esp_err_t MainApp_StopAndRelease();
+static uint32_t MainAppSignalWait(uint32_t signal, uint32_t timeout);
 
-static void MainApp_SMD_Manager_OperationCompleteCallback(SMD_Manager_Result_t result);
+static void MainApp_SMD_Manager_OperationCompleteCallback(SMDManager_Result_t result);
 
 
 
@@ -38,6 +39,8 @@ void app_main(void)
   test_function();
     
   #else
+    uint32_t signal;
+    esp_err_t result;
 
     while (1) {
 
@@ -50,6 +53,37 @@ void app_main(void)
             case MAINAPP_INITIALIZE_AND_START:
 
                 result = MainApp_InitializeAndStart();
+                if (result == ESP_OK) {
+                    ESP_LOGI("MAIN", "SMD Manager Initialized and Started successfully.");
+                } else {
+                    ESP_LOGE("MAIN", "Failed to Initialize and Start SMD Manager. Error: %d", result);
+                }
+
+                mainApp.state = MAINAPP_WAIT;
+            break;
+
+            case MAINAPP_WAIT:
+                // Here you can implement any waiting logic if needed
+
+                signal = MainAppSignalWait(0x01, 1000); // Example signal wait with 1 second timeout
+                if (signal & 0x01) {
+                    ESP_LOGI("MAIN", "Received stop signal.");
+                    mainApp.state = MAINAPP_STOP_RELEASE_AND_RESET;
+                }
+                vTaskDelay(pdMS_TO_TICKS(1000)); // Just a placeholder delay
+                break;
+            
+            case MAINAPP_STOP_RELEASE_AND_RESET:
+                ESP_LOGI("MAIN", "Stopping and Releasing SMD Manager...");
+
+                result = MainApp_StopAndRelease();
+                if (result == ESP_OK) {
+                    ESP_LOGI("MAIN", "SMD Manager Stopped and Released successfully.");
+                } else {
+                    ESP_LOGE("MAIN", "Failed to Stop and Release SMD Manager. Error: %d", result);
+                }
+                break;
+
             
             default:
                 break;
@@ -73,145 +107,45 @@ esp_err_t MainApp_InitializeAndStart(){
     // Initialize SMD Manager
     
     
-    result = SMD_Manager_Request(&mainApp.SMD_ManagerConfig);
+    result = SMDManager_Request(&mainApp.SMD_ManagerConfig);
 
     return result;
 }
 
-
-
-
-void Manager_SMD_Requesting(void){
-
-   //Resources needed for the module -> timers , submodules , callbaks
-
-   /*------------Define timers---------------*/
-
-    
-    
-    mainSolder.Manager_SMD_UpdateTemperature_Timer = xTimerCreate(
-                    "Manager_SMD_UpdateTemperature_Timer", // Name 
-                     pdMS_TO_TICKS(500),                  // Period of the timer
-                     pdTRUE,                             // Auto-reload        
-                     ( void * ) 0,                      // Timer ID
-                    Manager_SMD_UpdateTemperature_Timer_Callback);
-
-
-
-    /* ----------Temperature_Sensing--------------*/
-        // Callbaks for the module
-        
-        //Temp_Sensing_Request(); mising config with callbacks
-
-
-    /* ----------Temperature_Contrl---------------*/
-        // Callbaks for the module
-
-    /* ..........Display_Manager ----------------*/
-        // Callbaks for the module
-
-
-}
-
-void Manager_SMD_Task(){
-
-
-    while(1){
-
-        switch (mainSolder.state) {
-            case POWER_OFF:
-                // Handle POWER_OFF state
-                ESP_LOGI("MAIN_SOLDER", "State: POWER_OFF");
-                mainSolder.state = REQUESTING; // Example transition
-                break;
-
-            case REQUESTING:
-                // Handle REQUESTING state
-                ESP_LOGI("MAIN_SOLDER", "State: REQUESTING");
-
-            // Request of the TEMPERATURE SENCE module has to call Request() functions
-
-                Manager_SMD_Requesting();
-
-                break;
-
-            case REQUESTED:
-                // Handle REQUESTED state
-                ESP_LOGI("MAIN_SOLDER", "State: REQUESTED");
-
-                Manager_SMD_Starting();
-
-                break;
-
-            case SOLDERING:
-                // Handle SOLDERING state
-                ESP_LOGI("MAIN_SOLDER", "State: SOLDERING");
-                break;
-
-            case RELAXED:
-                // Handle RELAXED state
-                ESP_LOGI("MAIN_SOLDER", "State: RELAXED");
-                break;
-
-            case REALISING:
-                // Handle REALISING state
-                ESP_LOGI("MAIN_SOLDER", "State: REALISING");
-                break;
-
-            default:
-                ESP_LOGW("MAIN", "Unknown State");
-                break;
-        }   
-
-
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-
-
-}
-
-esp_err_t Manager_SMD_Starting(){
+esp_err_t MainApp_StopAndRelease(){
 
     esp_err_t result = ESP_FAIL;
 
-    // Start  resources needed for the modules 
+    result = SMDManager_Stop();
 
-   
-    
-    /* -----------Start Temperature Sensing-------------*/ 
-    //if ( result == ESP_OK )      
-    //{
-       result = Temp_Sensing_Start();
-        if ( result == ESP_OK)
-        {
-            ESP_LOGI("Manager_SMD_Starting", "Temperature Sensing Started Successfully");
-            result = ESP_OK;
-            vTaskDelay(pdMS_TO_TICKS(10));  
-        }
-        else
-         {
-            ESP_LOGE("Manager_SMD_Starting", "Failed to Start Temperature Sensing");
-            vTaskDelay(pdMS_TO_TICKS(10));  
-         }
-    //}  
-   // mainSolder.state = REQUESTED; // Transition to the next state
+    if (result != ESP_OK) {
+        ESP_LOGE("MainApp_StopAndRelease", "Failed to stop SMD Manager. Error: %d", result);
+        return result;
+    }
 
     return result;
 }
 
+
+
 /*------------------Callbaks--------------------*/
 
-void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer){
 
-    // Code to execute when the timer expires
-    ESP_LOGI("Timer_Callback", "Manager_SMD_UpdateTemperature_Timer_Callback executed");
 
-    //Manager_SMD_SignalSet(MANAGER_SMD_SIGNAL_UPDATE_TEMPERATURE);
-
-}
-
-void MainApp_SMD_Manager_OperationCompleteCallback(SMD_Manager_Result_t result){
+void MainApp_SMD_Manager_OperationCompleteCallback(SMDManager_Result_t result){
 
     ESP_LOGI("MainApp_SMD_Manager_OperationCompleteCallback", "Operation Complete Callback executed with result: %d", result);
 
+}
+
+
+static uint32_t MainAppSignalWait(uint32_t signal, uint32_t timeout){
+
+    uint32_t notifiedValue = 0;
+    xTaskNotifyWait(0x00,          // Don't clear any bits on entry
+                    ULONG_MAX,    // Clear all bits on exit
+                    &notifiedValue, // Receives the notification value
+                    pdMS_TO_TICKS(timeout)); // Wait time
+
+    return (notifiedValue & signal);
 }
