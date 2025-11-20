@@ -10,6 +10,7 @@ idf_component_register(
         "Test/Test.c"
         "Test/Temp_Sensing/TestTemp_Sensing.c"
         "Test/Display_Manager/TestDisplay_Manager.c"
+        "Test/SMD_Manager/TestSMD_Manager.c"
         "UI/screens/ui_Screen1.c"
         "UI/screens/ui_Screen2.c"
         "UI/ui.c"
@@ -26,6 +27,7 @@ idf_component_register(
         "Test"
         "Test/Temp_Sensing"
         "Test/Display_Manager"
+        "Test/SMD_Manager"
         "UI"
         "."
     REQUIRES

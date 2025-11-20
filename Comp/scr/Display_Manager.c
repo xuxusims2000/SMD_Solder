@@ -116,7 +116,7 @@ esp_err_t DisplayManager_Start(void)
 
 void DisplayManager_Stop(void)
 {
-    if (display_manager.state == DISPLAY_MANAGER_MAIN_SCREEN) {
+    if (display_manager.state == DISPLAY_MANAGER_IDLE) {
         xTaskNotify(display_manager.taskHandle, DISPLAY_MANAGER_SIGNAL_STOP, eSetBits);
         ESP_LOGI("DisplayManager_Stop", "Stopping display manager");
     } else {
@@ -167,7 +167,8 @@ void Display_Manager_Task(void *pvParameters)
             if (result == ESP_OK) {
                 display_manager.state = DISPLAY_MANAGER_REQUESTED;
                 ESP_LOGI("Display_Manager_Task", "STATE: REQUESTED");
-                if (display_manager.config.callbacks.OperationCompleteCallback)
+                
+                if (display_manager.config.callbacks.OperationCompleteCallback != NULL)
                     display_manager.config.callbacks.OperationCompleteCallback(DISPLAY_MANAGER_RESULT_REQUEST);
             } else {
                 ESP_LOGE("Display_Manager_Task", "REQUEST ERROR -> POWER_OFF");
@@ -178,7 +179,7 @@ void Display_Manager_Task(void *pvParameters)
         case DISPLAY_MANAGER_REQUESTED:
             signal = DisplayManagerSignalWait(DISPLAY_MANAGER_SIGNAL_START | DISPLAY_MANAGER_SIGNAL_RELEASE, portMAX_DELAY);
             if (signal & DISPLAY_MANAGER_SIGNAL_START) {
-                display_manager.state = DISPLAY_MANAGER_MAIN_SCREEN;
+                display_manager.state = DISPLAY_MANAGER_IDLE;
                 if (display_manager.config.callbacks.OperationCompleteCallback)
                     display_manager.config.callbacks.OperationCompleteCallback(DISPLAY_MANAGER_RESULT_START);
             } else if (signal & DISPLAY_MANAGER_SIGNAL_RELEASE) {
@@ -193,25 +194,24 @@ void Display_Manager_Task(void *pvParameters)
             //_lock_release(&lvgl_api_lock2);
             vTaskDelay(pdMS_TO_TICKS(500)); // feeds watchdog  //shold do a semafor
 
-            lv_label_set_text(ui_varTemp, "15 °C");
+            lv_label_set_text(ui_varTemp, "25 °C");
 
 
             break;
 
-        case DISPLAY_MANAGER_MAIN_SCREEN:
+        case DISPLAY_MANAGER_IDLE:
 
-            //display_manager.current_screen = lv_scr_act();
-        lv_obj_t * current_screen = lv_scr_act(); // Get the active screen just once
+            lv_obj_t * current_screen = lv_scr_act(); // Get the active screen just once
 
-        if (current_screen == ui_Screen1) {
-            ESP_LOGI("Display_Manager_Task", "STATE: Screen 1 (Home)");
-        } else if (current_screen == ui_Screen2) {
+            if (current_screen == ui_Screen1) {
+                ESP_LOGI("Display_Manager_Task", "STATE: Screen 1 (Home)");
+            } else if (current_screen == ui_Screen2) {
             // Now you can specifically handle when Screen 2 is active
             ESP_LOGI("Display_Manager_Task", "STATE: Screen 2 (Settings)");
-        } else {
+            } else {
             // This handles any other screen that might exist, or if the screen is NULL
             ESP_LOGW("Display_Manager_Task", "STATE: Unknown Screen active: %p", (void*)current_screen);
-        }
+            }
              
             /* La idea es fer que en fucnio de la pantalla que estigui 
             actualitzi els valors que siguin necesaris
@@ -406,4 +406,21 @@ static uint32_t DisplayManagerSignalWait(uint32_t signal, uint32_t timeout_ms)
     xTaskNotifyWait(0x00, signal, &notifiedValue, ticks);
 
     return notifiedValue;
+}
+
+void DisplayManager_SetState(DisplayManagerState state)
+{
+    switch (state)
+    {
+        case DISPLAY_MANAGER_IDLE:
+            display_manager.state = DISPLAY_MANAGER_IDLE;
+        break;
+    
+    default:
+        break;
+    }
+    
+    
+
+    display_manager.state = state;
 }

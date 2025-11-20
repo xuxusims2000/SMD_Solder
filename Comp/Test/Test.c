@@ -4,6 +4,7 @@
 #include "ILI9341_screen.h"
 #include "TestTemp_Sensing.h"
 #include "TestDisplay_Manager.h"
+#include "TestSMD_Manager.h"
 
 
 TaskHandle_t task1Handle = NULL;

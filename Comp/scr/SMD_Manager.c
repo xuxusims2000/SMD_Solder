@@ -23,6 +23,8 @@ void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer);
 typedef struct {
 
     TaskHandle_t                     taskHandle;
+    SemaphoreHandle_t                xSemaphore;
+
     SolderingManagerState   state;
     TimerHandle_t           Manager_SMD_UpdateTemperature_Timer;
 
@@ -46,8 +48,15 @@ void SMDManager_Init(void)
         ESP_LOGI("SMD_Manager", "Initializing...");
 
         DisplayManager_Init();
-        //TemperatureSensing_Init();
+        Temp_Sensing_Init();
         //TemperatureControl_Init();
+
+        mainSolder.xSemaphore = xSemaphoreCreateBinary();
+        if(mainSolder.xSemaphore == NULL) {
+            ESP_LOGE("SMD_Manager", "Failed to create semaphore");
+            return;
+        }
+        xSemaphoreGive(mainSolder.xSemaphore);
         
         mainSolder.state = POWER_OFF;
         
@@ -68,13 +77,94 @@ esp_err_t SMDManager_Request (SMDManager_Configuration_t* config){
 
     esp_err_t result = ESP_FAIL;
 
-    memcpy(&mainSolder.config, config, sizeof(SMDManager_Configuration_t));
+    if( xSemaphoreTake(mainSolder.xSemaphore, 0) != pdTRUE ){
+        ESP_LOGW("SMDManager_Request", "Semaphore not available");
+        return ESP_FAIL;
+    }
+    ESP_LOGI("SMDManager_Request", "Semaphore taken, requesting SMD Manager");
 
+    memcpy(&mainSolder.config, config, sizeof(SMDManager_Configuration_t));
     mainSolder.state = REQUESTING;
+    
     xTaskNotify(&mainSolder.taskHandle, SMD_MANAGER_SIGNAL_REQUESTED, eSetBits);
 
     result = ESP_OK;
     return result;
+}
+
+esp_err_t SMDManager_Release(void){
+
+    if (xSemaphoreGive(mainSolder.xSemaphore) != pdTRUE) {
+        ESP_LOGE("SMDManager_Release", "Failed to give semaphore");
+        return ESP_FAIL;
+    }
+    else {        
+        if (mainSolder.state == REQUESTED ) {
+            mainSolder.state = RELEASING;
+            xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_RELEASE, eSetBits);
+            ESP_LOGI("SMDManager_Release", "SMD Manager release OK");
+            return ESP_OK;
+        } 
+        else {
+            ESP_LOGW("SMDManager_Release", "Invalid state (%d)", mainSolder.state);
+            return ESP_FAIL;
+        }     
+        
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t SMDManager_Start(void){
+
+    if (mainSolder.state == REQUESTED) {
+        
+        xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_START, eSetBits);
+        return ESP_OK;
+    }
+    else {
+        ESP_LOGE("SMDManager_Start", "Invalid state (%d)", mainSolder.state);
+        return ESP_FAIL;
+    }
+
+    
+    return ESP_OK;
+}
+
+esp_err_t SMDManager_Starting(void){
+    esp_err_t result = ESP_FAIL;
+
+    result = Temp_Sensing_Start();
+    vTaskDelay(pdMS_TO_TICKS(500)); // Delay for 500 mseconds
+    if (result != ESP_OK) {
+        ESP_LOGE("SMDManager_Starting", "Temp_Sensing_Start failed");
+        return result;
+    }
+
+    result = DisplayManager_Start();
+    vTaskDelay(pdMS_TO_TICKS(500)); // Delay for 500 mseconds
+    if (result != ESP_OK) {
+        ESP_LOGE("SMDManager_Starting", "DisplayManager_Start failed");
+        return result;
+    }
+
+
+    return result;
+}
+
+esp_err_t SMDManager_Stop(void){
+
+    if (mainSolder.state == SOLDERING) {
+        xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_STOP, eSetBits);
+        ESP_LOGI("SMDManager_Stop", "Stopping SMD Manager");
+        return ESP_OK;
+    } 
+    else {
+        ESP_LOGE("SMDManager_Stop", "Invalid state (%d)", mainSolder.state);
+        return ESP_FAIL;
+    }
+    
+    return ESP_OK;
 }
 
 void SMDManager_Task(void *pvParameters){
@@ -90,33 +180,80 @@ void SMDManager_Task(void *pvParameters){
         switch (mainSolder.state) {
 
             case POWER_OFF:
-                // Handle POWER_OFF state
                 ESP_LOGI("MAIN_SOLDER", "State: POWER_OFF");
                 SMDManager_SignalWait(SMD_MANAGER_SIGNAL_REQUESTED, portMAX_DELAY);
 
                 break;
 
             case REQUESTING:
-                // Handle REQUESTING state
                 ESP_LOGI("MAIN_SOLDER", "State: REQUESTING");
 
-            // Request of the TEMPERATURE SENCE module has to call Request() functions
-
-                SMDManager_Requesting();
+                result = SMDManager_Requesting();
+                if( result == ESP_OK){
+                    mainSolder.state = REQUESTED;
+                    if(mainSolder.config.callbacks.OperationCompleteCallback != NULL)
+                        mainSolder.config.callbacks.OperationCompleteCallback(DOSEMANAGER_RESULT_REQUEST);
+                }
+                else {
+                    ESP_LOGE("MAIN_SOLDER", "SMDManager_Requesting failed");
+                    
+                    if (xSemaphoreGive(mainSolder.xSemaphore) != pdTRUE) {
+                        ESP_LOGE("MAIN_SOLDER", "Failed to give semaphore");
+                    }
+                    mainSolder.state = RELEASING;   
+                }
 
                 break;
 
             case REQUESTED:
-                // Handle REQUESTED state
                 ESP_LOGI("MAIN_SOLDER", "State: REQUESTED");
 
-                SMDManager_Starting();
+                signal = SMDManager_SignalWait(SMD_MANAGER_SIGNAL_START | 
+                                                SMD_MANAGER_SIGNAL_RELEASE, 
+                                                portMAX_DELAY);
+
+                if (signal & SMD_MANAGER_SIGNAL_START) {
+                    result = SMDManager_Starting();
+                    
+                    if (result == ESP_OK) {
+                        mainSolder.state = IDLE;
+
+                        if (mainSolder.config.callbacks.OperationCompleteCallback != NULL){
+                            mainSolder.config.callbacks.OperationCompleteCallback(DOSEMANAGER_RESULT_START);
+                        }                    
+                    } else {
+                        ESP_LOGE("MAIN_SOLDER", "SMDManager_Starting failed");
+                        mainSolder.state = RELEASING;
+                    }
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_RELEASE) {
+                    mainSolder.state = RELEASING;
+                }
 
                 break;
 
+            case IDLE:
+
+                if ( lv_scr_act() != ui_Screen1 ) {
+                    ESP_LOGI("MAIN_SOLDER", "State: IDLE");
+                    DisplayManager_SetState(DISPLAY_MANAGER_IDLE);
+            
+                }
+
+                mainSolder.temperature = TempSensing_GetTemperature();
+                DisplayManager_SetTemperature(mainSolder.temperature);
+                vTaskDelay(pdMS_TO_TICKS(2000)); // Delay for 2000 mseconds
+
+
+
+                break;
+            
             case SOLDERING:
-                // Handle SOLDERING state
                 ESP_LOGI("MAIN_SOLDER", "State: SOLDERING");
+                
+                signal = SMDManager_SignalWait(SMD_MANAGER_SIGNAL_STOP | 
+                                                SMD_MANAGER_SIGNAL_RELEASE, 
+                                                portMAX_DELAY);
                 break;
 
             case RELAXED:
@@ -124,9 +261,9 @@ void SMDManager_Task(void *pvParameters){
                 ESP_LOGI("MAIN_SOLDER", "State: RELAXED");
                 break;
 
-            case REALISING:
-                // Handle REALISING state
-                ESP_LOGI("MAIN_SOLDER", "State: REALISING");
+            case RELEASING:
+                // Handle RELEASING state
+                ESP_LOGI("MAIN_SOLDER", "State: RELEASING");
                 break;
 
             default:
@@ -151,7 +288,7 @@ esp_err_t SMDManager_Requesting(void){
     
     mainSolder.Manager_SMD_UpdateTemperature_Timer = xTimerCreate(
                     "Manager_SMD_UpdateTemperature_Timer", // Name 
-                     pdMS_TO_TICKS(500),                  // Period of the timer
+                     pdMS_TO_TICKS(5000),                  // Period of the timer
                      pdTRUE,                             // Auto-reload        
                      ( void * ) 0,                      // Timer ID
                     Manager_SMD_UpdateTemperature_Timer_Callback);

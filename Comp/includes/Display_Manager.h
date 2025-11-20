@@ -28,6 +28,8 @@
 #include "ui.h"
 
 
+#ifndef DISPLAY_MANAGER_H_
+#define DISPLAY_MANAGER_H_
 
 // Using SPI2 in the example
 #define LCD_HOST  SPI2_HOST
@@ -69,7 +71,7 @@ typedef enum {
     DISPLAY_MANAGER_REQUESTING,
     DISPLAY_MANAGER_REQUESTED,
     //DISPLAY_MANAGER_START,
-    DISPLAY_MANAGER_MAIN_SCREEN,
+    DISPLAY_MANAGER_IDLE,
     DISPLAY_MANAGER_RELEASING
 } DisplayManagerState;
 
@@ -102,5 +104,8 @@ esp_err_t DisplayManager_Start(void);
 void DisplayManager_Stop(void);
 esp_err_t DisplayManager_Release(void);
 
+void DisplayManager_SetState(DisplayManagerState state);
+
 esp_err_t DisplayManager_SetTemperature(float temperature);
 
+#endif // DISPLAY_MANAGER_H_

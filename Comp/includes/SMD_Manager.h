@@ -33,9 +33,10 @@ typedef enum {
     POWER_OFF,
     REQUESTING,
     REQUESTED,
+    IDLE,
     SOLDERING,
     RELAXED,  
-    REALISING
+    RELEASING
 } SolderingManagerState;
 
 typedef enum SMDManager_Result_e
