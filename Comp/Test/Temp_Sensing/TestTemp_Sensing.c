@@ -134,7 +134,7 @@ void Temp_Sensing_Test_Task_2(void *pvParameters) // Test task function prototyp
     
     for(uint8_t i=0; i<2; i++)
     {        
-        ESP_LOGI("Temp_Sensing_Task", "Time Test Iteration: %d", i);
+        ESP_LOGI("Test_Temp_Sensing_Task", "Time Test Iteration: %d", i);
         // Request temperature sensing
         Temp_Sensing_Request(&testTempSensing.config);
         vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds

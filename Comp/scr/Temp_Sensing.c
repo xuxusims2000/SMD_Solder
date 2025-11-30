@@ -258,7 +258,7 @@ void Temp_Sensing_Task(void *pvParameters){
             break;
 
         case TEMP_SENSING_START:
-            
+            ESP_LOGI("Temp_Sensing_Task", "STATE: START");
             signal = tempSensingSignalWait( TEMP_SENSING_SIGNAL_STOP ,  portMAX_DELAY);
             
             if (signal & TEMP_SENSING_SIGNAL_STOP)
@@ -320,7 +320,7 @@ esp_err_t init_spi_bus() {
         .max_transfer_sz = 16,      // MAX6675 only transfers 16 bits
     };
 
-    esp_err_t ret = spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    esp_err_t ret = spi_bus_initialize(SPI3_HOST, &buscfg, SPI_DMA_CH_AUTO);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to initialize SPI bus: %s", esp_err_to_name(ret));
         return ret;
@@ -338,7 +338,7 @@ esp_err_t add_max6675_device(spi_device_handle_t *handle) {
         .queue_size = 1,             // Transactions queued
     };
 
-    esp_err_t ret = spi_bus_add_device(SPI2_HOST, &devcfg, handle);
+    esp_err_t ret = spi_bus_add_device(SPI3_HOST, &devcfg, handle);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to add MAX6675 device: %s", esp_err_to_name(ret));
         return ret;

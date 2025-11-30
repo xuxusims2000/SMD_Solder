@@ -39,7 +39,7 @@ void Test_smd_manager_1(void){
     /* Create and start 'test task thread'*/
     xTaskCreate(TestSMD_Manager_Task_1, "TestSMD_Manager_Task_1", 2048, NULL, 1, &testSMDManager.taskHandle);
 
-    ESP_LOGI("Test_smd_manager_1", "SMD Manager Test 1 Completed");
+   // ESP_LOGI("Test_smd_manager_1", "SMD Manager Init Completed");
 }
 
 
@@ -55,12 +55,12 @@ void TestSMD_Manager_Task_1(void *pvParameters) // Test task function prototype
         
     testSMDManager.config.callbacks.OperationCompleteCallback = TestSMD_Manager_OperationCompleteCallback;  
 
-    for(;;)
+    for(uint8_t i=0; i<2; i++)
     {
         ESP_LOGI("TestSMD_Manager_Task_1", "Requesting SMD Manager...");
         SMDManager_Request(&testSMDManager.config);
         vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 mseconds
-
+        ESP_LOGI("TestSMD_Manager_Task_1", "SMD Manager Request waiting");
         TestSMD_Manager_SignalWait( TEST_SMD_MANAGER_SIGNAL_REQUEST_COMPLETE,  portMAX_DELAY);
         ESP_LOGI("TestSMD_Manager_Task_1", "SMD Manager Request OK");
 
@@ -69,10 +69,13 @@ void TestSMD_Manager_Task_1(void *pvParameters) // Test task function prototype
         TestSMD_Manager_SignalWait( TEST_SMD_MANAGER_SIGNAL_START_COMPLETE,  portMAX_DELAY);
         ESP_LOGI("TestSMD_Manager_Task_1", "SMD Manager Start OK");
 
-        while(1){
+        
+       while(1)
+          {
+
             vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
 
-        }
+          }
         vTaskDelay(pdMS_TO_TICKS(5000)); // Delay for 5000 mseconds
 
         ESP_LOGI("TestSMD_Manager_Task_1", "Stopping SMD Manager...");
@@ -115,4 +118,21 @@ void TestSMD_Manager_OperationCompleteCallback(SMDManager_Result_t result){
             ESP_LOGW("TestSMD_Manager_Callback", "Unknown result in callback: %d", result);
             break;
     }
+}
+
+uint32_t TestSMD_Manager_SignalWait(uint32_t signal, uint32_t timeout){
+    uint32_t notifiedValue = 0;
+    TickType_t ticks;
+
+    if (timeout == portMAX_DELAY) {
+        ticks = portMAX_DELAY;
+    } else {
+        ticks = pdMS_TO_TICKS(timeout);
+        if (ticks == 0) ticks = 1; // avoid zero wait if ms < tick period
+    }
+
+    // Wait for notification bits (clear on exit specified by 'signal')
+    xTaskNotifyWait(0x00, signal, &notifiedValue, ticks);
+
+    return notifiedValue;
 }

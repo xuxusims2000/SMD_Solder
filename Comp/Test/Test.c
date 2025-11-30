@@ -24,17 +24,17 @@ void test_function() {
 
     /*-------Module temperature sensing tests----------------*/
     //Test_temperature_sensing_0();
-    Test_temperature_sensing_1();
+    //Test_temperature_sensing_1();
     //Test_temperature_sensing_2();
 
     /*----------Module display----------------------*/
     //Test_main_screen();
-    Test_display_manager_1();
+    //Test_display_manager_1();
     //Test_display_manager_2();
 
 
     /*----------Module SMD Manager----------------------*/
-    //Test_smd_manager_1();
+    Test_smd_manager_1();
 
     
     //Test_PID_control_();
