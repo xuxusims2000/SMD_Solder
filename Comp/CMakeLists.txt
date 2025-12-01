@@ -3,7 +3,6 @@ idf_component_register(
         "scr/ILI9341_screen.c"
         "scr/Temp_Sensing.c"
         "scr/Temp_Ctrl.c"
-        "scr/PWM_Config.c"
         "scr/Screen_design.c"
         "scr/Display_Manager.c"
         "scr/SMD_Manager.c"
@@ -11,6 +10,7 @@ idf_component_register(
         "Test/Temp_Sensing/TestTemp_Sensing.c"
         "Test/Display_Manager/TestDisplay_Manager.c"
         "Test/SMD_Manager/TestSMD_Manager.c"
+        "Test/Temp_Ctrl/TestTemp_Ctrl.c"
         "UI/screens/ui_Screen1.c"
         "UI/screens/ui_Screen2.c"
         "UI/ui.c"
@@ -28,6 +28,7 @@ idf_component_register(
         "Test/Temp_Sensing"
         "Test/Display_Manager"
         "Test/SMD_Manager"
+        "Test/Temp_Ctrl"
         "UI"
         "."
     REQUIRES

@@ -5,6 +5,7 @@
 #include "TestTemp_Sensing.h"
 #include "TestDisplay_Manager.h"
 #include "TestSMD_Manager.h"
+#include "TestTemp_Ctrl.h"
 
 
 TaskHandle_t task1Handle = NULL;
@@ -32,12 +33,15 @@ void test_function() {
     //Test_display_manager_1();
     //Test_display_manager_2();
 
+    /*----------Module Temperature Control----------------------*/
+    Test_Temp_Ctrl_1();
+
 
     /*----------Module SMD Manager----------------------*/
-    Test_smd_manager_1();
+    //Test_smd_manager_1();
 
     
-    //Test_PID_control_();
+
 }
 
 

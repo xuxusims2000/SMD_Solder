@@ -29,6 +29,8 @@ void TestSMD_Manager_OperationCompleteCallback(SMDManager_Result_t result);
 
 
 // -------------------- Test functions ------------------------
+//@ First time useing SMD Manager module convining Display and temperature sensing
+//      it prints the temperature in the display every second
 
 void Test_smd_manager_1(void){
 

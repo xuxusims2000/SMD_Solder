@@ -236,7 +236,7 @@ void Temp_Sensing_Task(void *pvParameters){
         case TEMP_SENSING_REQUESTED:
             ESP_LOGI("Temp_Sensing_Task", "STATE: REQUESTED");
             //Wait for start or release signal
-            {
+            
                 signal = tempSensingSignalWait( TEMP_SENSING_SIGNAL_START | TEMP_SENSING_SIGNAL_RLEASE,  portMAX_DELAY);
                 
                 if (signal & TEMP_SENSING_SIGNAL_START)
@@ -253,7 +253,7 @@ void Temp_Sensing_Task(void *pvParameters){
                     temp_sensing.state = TEMP_SENSING_RELEASING;
                     ESP_LOGI("Temp_Sensing_Task", "STATE: RELEASING");
                 }
-            }  
+          
 
             break;
 
@@ -412,7 +412,7 @@ esp_err_t tempSensing_Releasing(void)
 }
 
 
-
+/* ---------------Signals---------------*/
 
 uint32_t tempSensingSignalWait(uint32_t signal, uint32_t timeout)
 {
