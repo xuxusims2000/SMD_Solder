@@ -21,14 +21,7 @@ MainApp_t mainApp = {
     .state = POWER_OFF
 };
 
-// --- Configuration Constants ---
-#define LEDC_TIMER              LEDC_TIMER_0
-#define LEDC_MODE               LEDC_HIGH_SPEED_MODE 
-#define LEDC_OUTPUT_IO          GPIO_NUM_33         // Output on GPIO 33
-#define LEDC_CHANNEL            LEDC_CHANNEL_0    
-#define LEDC_DUTY_RES           LEDC_TIMER_10_BIT   // 10 bits = 0 to 1023 max
-#define LEDC_FREQUENCY          (5000)              // 5 kHz Frequency
-#define LEDC_DUTY_VALUE         (512)
+
 
 static esp_err_t MainApp_InitializeAndStart();
 static esp_err_t MainApp_StopAndRelease();

@@ -61,7 +61,7 @@ esp_err_t set_pwm_duty(int duty);
 #define Ki 0.5      // Integral gain
 #define Kd 1.0      // Derivative gain
 
-#define FREQUENCY_PWM (500) //Frequency of PWM in Hz
+#define FREQUENCY_PWM (250) //Frequency of PWM in Hz
 
 #define Tmax 350 //Tempere max that hotplate can get
 
