@@ -225,7 +225,9 @@ void Temp_Ctrl_Release(void){
             ESP_LOGI("Temp_Ctrl_Task", "STATE: START");
 
             //vTaskDelay(pdMS_TO_TICKS(5000)); // Delay for 5000 milliseconds
-            set_pwm_duty(512); //Example set duty cycle to 50%
+            //to test shold call the PID control function here
+            //Test_PID_control_();
+            set_pwm_duty(200); //Example set duty cycle to 50%
 
             signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP ,  portMAX_DELAY);
 
