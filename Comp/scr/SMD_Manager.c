@@ -5,10 +5,18 @@
 
 /*============================== Defines ==============================*/
 
-#define SMD_MANAGER_SIGNAL_REQUESTED   (1 << 0)
-#define SMD_MANAGER_SIGNAL_RELEASE     (1 << 1)
-#define SMD_MANAGER_SIGNAL_START       (1 << 2)
-#define SMD_MANAGER_SIGNAL_STOP        (1 << 3)
+#define SMD_MANAGER_SIGNAL_REQUESTED        (1 << 0)
+#define SMD_MANAGER_SIGNAL_RELEASE          (1 << 1)
+#define SMD_MANAGER_SIGNAL_START            (1 << 2)
+#define SMD_MANAGER_SIGNAL_STOP             (1 << 3)
+#define SMD_MANAGER_SIGNAL_UPDATE_TEMP      (1 << 4)
+#define SMD_MANAGER_SIGNAL_SET_TEMP         (1 << 5)
+#define SMD_MANAGER_SIGNAL_SETTINGS         (1 << 6)
+#define SMD_MANAGER_SIGNAL_SOLDER           (1 << 7)
+#define SMD_MANAGER_SIGNAL_MORE_TEMP        (1 << 8)
+#define SMD_MANAGER_SIGNAL_LESS_TEMP        (1 << 9)
+#define SMD_MANAGER_SIGNAL_HEAT             (1 << 10)
+
 
 /*============================== Static Prototypes ==============================*/
 
@@ -245,21 +253,96 @@ void SMDManager_Task(void *pvParameters){
 
             case IDLE:
                 ESP_LOGI("MAIN_SOLDER", "State: IDLE");
-                if ( lv_scr_act() != ui_Screen1 ) {
-                    ESP_LOGI("MAIN_SOLDER", "State: IDLE");
-                    DisplayManager_SetState(DISPLAY_MANAGER_IDLE);
-            
+
+                // Identify the current screen 
+                if (DisplayManager_GetScreen() != ui_Screen1) {
+                    ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
                 }
-                 
-                while(1)
-                {
+         
+                
+                
+                mainSolder.temperature = TempSensing_GetTemperature();
+                DisplayManager_SetTemperature(mainSolder.temperature);
+                ESP_LOGI("Display_Manager_Test_Task", "Setting temperature to: %.2f °C",  mainSolder.temperature);
+                vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 2000 mseconds
+
+                
+                signal = SMDManager_SignalWait(SMD_MANAGER_SIGNAL_STOP | 
+                                                SMD_MANAGER_SIGNAL_RELEASE|
+                                                SMD_MANAGER_SIGNAL_SOLDER|
+                                                SMD_MANAGER_SIGNAL_SET_TEMP|
+                                                SMD_MANAGER_SIGNAL_SETTINGS| 
+                                                SMD_MANAGER_SIGNAL_UPDATE_TEMP,
+                                                portMAX_DELAY);
+
+                if (signal & SMD_MANAGER_SIGNAL_STOP) {
+                    
+
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_RELEASE) {
+                    
+
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_SOLDER) {
+                   
+
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_SET_TEMP) {
+                    
+                    mainSolder.state = SET_TEMP;
+
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_SETTINGS) {
+      
+
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_UPDATE_TEMP) {
+
+                }
+
+                break;
+            
+            case SET_TEMP:
+                // Identify the current screen 
+                if (DisplayManager_GetScreen() != ui_Screen1) {  // MODIFY THE ACTUALL SCREEN WHE SCREENS ARE DEFINED
+                    ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
+                }
 
                 mainSolder.temperature = TempSensing_GetTemperature();
                 DisplayManager_SetTemperature(mainSolder.temperature);
                 ESP_LOGI("Display_Manager_Test_Task", "Setting temperature to: %.2f °C",  mainSolder.temperature);
                 vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 2000 mseconds
 
-                }    
+                signal = SMDManager_SignalWait(SMD_MANAGER_SIGNAL_STOP | 
+                                                SMD_MANAGER_SIGNAL_RELEASE|
+                                                SMD_MANAGER_SIGNAL_MORE_TEMP|
+                                                SMD_MANAGER_SIGNAL_LESS_TEMP|
+                                                SMD_MANAGER_SIGNAL_HEAT,
+                                                portMAX_DELAY);
+
+                if (signal & SMD_MANAGER_SIGNAL_STOP) {
+                    
+
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_RELEASE) {
+                    
+
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_MORE_TEMP) {
+                   
+
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_LESS_TEMP) {
+                    
+
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_HEAT) {
+                    
+                    TempCtrl_SetState(TEMP_CTRL_SET_TEMP);
+
+                    TempCtrl_SetTemperature(mainSolder.temperature);
+
+                }
 
                 break;
             

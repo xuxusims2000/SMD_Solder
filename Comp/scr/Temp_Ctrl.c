@@ -267,6 +267,9 @@ void Temp_Ctrl_Release(void){
             }
             
             else if ( signal & TEMP_CTRL_SIGNAL_START)
+            {
+
+            }
 
             else if (signal & TEMP_CTRL_SIGNAL_STOP)
             {
@@ -351,7 +354,7 @@ esp_err_t config_pwm(void){
        
        ledc_update_duty (LEDC_HIGH_SPEED_MODE,LEDC_CHANNEL_0);
 
-       ESP_LOGI("set_pwm_duty", "PWM duty set to %d", duty);
+       ESP_LOGI("set_pwm_duty", "PWM duty set to %lu", duty);
    
        return ESP_OK;
    
@@ -403,12 +406,12 @@ void Test_PID_control_(){
 
 }
 
-esp_err_t set_temperature(uint32_t temp)
+esp_err_t TempCtrl_SetTemperature(uint32_t temp)
 {
     temp_ctrl.temp = temp;
 
     //xTaskNotify envia senyal per a que es vagi a estat posar temperatura
-    
+    return ESP_OK;
 }
 
    
@@ -450,6 +453,13 @@ esp_err_t tempCtrl_Releasing(void)
     ESP_LOGI("Temp_Ctrl_Releasing", "PWM stopped successfully");
     
     return result ;
-}   
+} 
+
+ void TempCtrl_SetState(TempCtrlState state)
+{
+    //TODO -> validate state transition
+    
+    temp_ctrl.state = state;
+}
 
 

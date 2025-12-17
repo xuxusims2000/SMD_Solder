@@ -146,6 +146,11 @@ esp_err_t DisplayManager_SetTemperature(float temperature)
     return result;
 }
 
+lv_obj_t* DisplayManager_GetScreen(void)
+{
+   return lv_scr_act();                              
+}
+
 /*============================== Main Task ==============================*/
 
 void Display_Manager_Task(void *pvParameters)
@@ -424,3 +429,5 @@ void DisplayManager_SetState(DisplayManagerState state)
 
     display_manager.state = state;
 }
+
+

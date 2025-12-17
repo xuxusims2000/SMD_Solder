@@ -108,4 +108,6 @@ void DisplayManager_SetState(DisplayManagerState state);
 
 esp_err_t DisplayManager_SetTemperature(float temperature);
 
+lv_obj_t* DisplayManager_GetScreen(void);
+
 #endif // DISPLAY_MANAGER_H_

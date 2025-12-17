@@ -34,6 +34,7 @@ typedef enum {
     REQUESTING,
     REQUESTED,
     IDLE,
+    SET_TEMP,
     SOLDERING,
     RELAXED,  
     RELEASING

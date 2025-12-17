@@ -53,9 +53,11 @@ esp_err_t Temp_Ctrl_Start(void);
 void Temp_Ctrl_Stop(void);
 void Temp_Ctrl_Release(void);
 
+void TempCtrl_SetState(TempCtrlState state);
+
 esp_err_t config_pwm(void);
 esp_err_t set_pwm_duty(uint32_t duty);
-esp_err_t set_temperature(uint32_t temp);
+esp_err_t TempCtrl_SetTemperature(uint32_t temp);
 
 
 // PID Constants (Tune these values)
