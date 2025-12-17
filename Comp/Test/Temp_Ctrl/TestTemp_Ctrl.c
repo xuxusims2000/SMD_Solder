@@ -62,7 +62,7 @@ void TestTemp_Ctrl_Task_1(void *pvParameters) // Test task function prototype
         TestTemp_Ctrl_SignalWait( TEMP_CTRL_SIGNAL_START_COMPLETE,  portMAX_DELAY);
         ESP_LOGI("TestTemp_Ctrl_Task_1", "Temperature Control Start OK");
 
-        
+       // set_temperature(50);
        while(1)
           {
 

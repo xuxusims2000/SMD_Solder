@@ -6,10 +6,14 @@
 #define TEMP_CTRL_SIGNAL_RELEASE     (1 << 1)  // Signal to indicate temperature control 
 #define TEMP_CTRL_SIGNAL_START       (1 << 2)  // Signal to indicate temperature control
 #define TEMP_CTRL_SIGNAL_STOP        (1 << 3)  // Signal to release temperature control
+#define TEMP_CTRL_SIGNAL_SET_TEMP    (1 << 4)  // Signal to set temperature
 
 esp_err_t tempCtrl_Requesting(void);
 uint32_t tempCtrlSignalWait(uint32_t signal, uint32_t timeout);
 esp_err_t tempCtrl_Releasing(void);
+
+esp_err_t config_pwm(void);
+//esp_err_t set_pwm_duty(uint32_t duty);
 
 typedef struct {
     TempCtrlState                state;
@@ -26,6 +30,8 @@ typedef struct {
     uint32_t                        last_error;
     uint32_t                        integral;
     const double                    dt;
+
+    uint32_t                        temp;
 
 } TempCtrl_t;
 
@@ -224,12 +230,12 @@ void Temp_Ctrl_Release(void){
         case TEMP_CTRL_START:
             ESP_LOGI("Temp_Ctrl_Task", "STATE: START");
 
-            //vTaskDelay(pdMS_TO_TICKS(5000)); // Delay for 5000 milliseconds
-            //to test shold call the PID control function here
-            //Test_PID_control_();
-            set_pwm_duty(200); //Example set duty cycle to 50%
+            //Here so far doing test in the future shold do the curve of temperature
+            
+            //set_pwm_duty(200); //Example set duty cycle to 50%
 
-            signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP ,  portMAX_DELAY);
+
+            signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP | TEMP_CTRL_SET_TEMP,  portMAX_DELAY);
 
             if (signal & TEMP_CTRL_SIGNAL_STOP)
             {
@@ -240,6 +246,38 @@ void Temp_Ctrl_Release(void){
                     temp_ctrl.config.callbacks.OperationCompleteCallback(TEMP_CTRL_RESULT_STOP);
                 }
             }
+
+            else if (signal & TEMP_CTRL_SET_TEMP)
+            {
+                temp_ctrl.state = TEMP_CTRL_SET_TEMP;
+            }
+            
+            break;
+
+        case TEMP_CTRL_SET_TEMP:
+            ESP_LOGI("Temp_Ctrl_Task", "STATE: SET TEMPERATURE");
+
+            
+
+            signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP | TEMP_CTRL_SET_TEMP | TEMP_CTRL_SIGNAL_START,  portMAX_DELAY);
+
+            if ( signal & TEMP_CTRL_SET_TEMP )
+            {
+
+            }
+            
+            else if ( signal & TEMP_CTRL_SIGNAL_START)
+
+            else if (signal & TEMP_CTRL_SIGNAL_STOP)
+            {
+                temp_ctrl.state = TEMP_CTRL_REQUESTED;
+                ESP_LOGI("Temp_Ctrl_Task", "STATE: REQUESTED");
+                if (temp_ctrl.config.callbacks.OperationCompleteCallback != NULL)
+                {
+                    temp_ctrl.config.callbacks.OperationCompleteCallback(TEMP_CTRL_RESULT_STOP);
+                }
+            }
+
             break;
 
         case TEMP_CTRL_RELEASING:
@@ -308,7 +346,7 @@ esp_err_t config_pwm(void){
        return ESP_OK;
    }
    
-   esp_err_t set_pwm_duty(int duty){
+   esp_err_t set_pwm_duty(uint32_t duty){ // set_temperature
        ledc_set_duty(LEDC_HIGH_SPEED_MODE,LEDC_CHANNEL_0,duty);
        
        ledc_update_duty (LEDC_HIGH_SPEED_MODE,LEDC_CHANNEL_0);
@@ -341,7 +379,7 @@ uint64_t compute_pid(double setpoint, double current_temp) {
 return output;
 }
 
-uint16_t Temperature2PWM(uint16_t temperature){
+uint16_t Temperature2PWM(uint16_t temperature){ // doit as define
     uint16_t new_duty = 0;
 
     new_duty = (temperature * 1023) / Tmax;
@@ -363,6 +401,14 @@ void Test_PID_control_(){
     //vTaskDelay(pdMS_TO_TICKS(1000)); // Delay 1 second
     
 
+}
+
+esp_err_t set_temperature(uint32_t temp)
+{
+    temp_ctrl.temp = temp;
+
+    //xTaskNotify envia senyal per a que es vagi a estat posar temperatura
+    
 }
 
    

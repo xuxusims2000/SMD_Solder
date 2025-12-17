@@ -19,6 +19,7 @@ typedef enum {
     TEMP_CTRL_RQUESTING,
     TEMP_CTRL_REQUESTED,
     TEMP_CTRL_START,
+    TEMP_CTRL_SET_TEMP,
     TEMP_CTRL_RELEASING
 } TempCtrlState;
 
@@ -53,7 +54,8 @@ void Temp_Ctrl_Stop(void);
 void Temp_Ctrl_Release(void);
 
 esp_err_t config_pwm(void);
-esp_err_t set_pwm_duty(int duty);
+esp_err_t set_pwm_duty(uint32_t duty);
+esp_err_t set_temperature(uint32_t temp);
 
 
 // PID Constants (Tune these values)
