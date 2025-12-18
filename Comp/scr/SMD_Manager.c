@@ -411,14 +411,6 @@ esp_err_t SMDManager_Requesting(void){
     return result;
 }
 
-void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer){
-
-    // Code to execute when the timer expires
-    ESP_LOGI("Timer_Callback", "Manager_SMD_UpdateTemperature_Timer_Callback executed");
-
-    //Manager_SMD_SignalSet(MANAGER_SMD_SIGNAL_UPDATE_TEMPERATURE);
-
-}
 
 uint32_t SMDManager_SignalWait(uint32_t signal, uint32_t timeout){
     uint32_t notifiedValue = 0;
@@ -435,4 +427,24 @@ uint32_t SMDManager_SignalWait(uint32_t signal, uint32_t timeout){
     xTaskNotifyWait(0x00, signal, &notifiedValue, ticks);
 
     return notifiedValue;
+}
+
+/*----------------Callback----------------------------*/
+
+void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer){
+
+    // Code to execute when the timer expires
+    ESP_LOGI("Timer_Callback", "Manager_SMD_UpdateTemperature_Timer_Callback executed");
+
+    //Manager_SMD_SignalSet(MANAGER_SMD_SIGNAL_UPDATE_TEMPERATURE);
+
+}
+
+void SMDManager_HeatUp_timer(void* arg)
+{
+    if (mainSolder.state == SET_TEMP )
+    {
+        xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_HEAT, eSetBits);
+    }
+    ESP_LOGI(TAG, "Timer triggered! Time since boot: %lld us", esp_timer_get_time());
 }
