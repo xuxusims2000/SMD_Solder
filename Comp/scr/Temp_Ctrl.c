@@ -26,11 +26,12 @@ typedef struct {
     SemaphoreHandle_t               TempCtrl_xSemaphoreHandle; //Defines a semaphore to manage the resource
     
     uint32_t                        pwm_duty;
-    uint16_t                        target_temperature;
+ 
     uint32_t                        last_error;
     uint32_t                        integral;
     const double                    dt;
-
+   
+    uint32_t                        target_temperature;
     uint32_t                        temp;
 
 } TempCtrl_t;
@@ -258,12 +259,11 @@ void Temp_Ctrl_Release(void){
             ESP_LOGI("Temp_Ctrl_Task", "STATE: SET TEMPERATURE");
 
             
-
             signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP | TEMP_CTRL_SET_TEMP | TEMP_CTRL_SIGNAL_START,  portMAX_DELAY);
 
             if ( signal & TEMP_CTRL_SET_TEMP )
             {
-
+                output = Compute_pid(temp_ctrl.target_temperature, temp_ctrl.temp);
             }
             
             else if ( signal & TEMP_CTRL_SIGNAL_START)
@@ -363,7 +363,7 @@ esp_err_t config_pwm(void){
 
 
 /*------------------PID Controller Function--------------------------*/ 
-uint64_t compute_pid(double setpoint, double current_temp) {
+uint64_t Compute_pid(double setpoint, double current_temp) {
     // Compute error
     double error = setpoint - current_temp;
 
@@ -406,10 +406,19 @@ void Test_PID_control_(){
 
 }
 
-esp_err_t TempCtrl_SetTemperature(uint32_t temp)
-{
-    temp_ctrl.temp = temp;
+esp_err_t TempCtrlo_UpdateTemperature(uint32_t temperature){ //fpaso de flaot a uint32
+    esp_err_t result = ESP_FAIL;
 
+    temp_ctrl.temp = temperature;
+
+    return result = ESP_OK;
+}
+
+
+esp_err_t TempCtrl_SetTemperature(uint32_t temp) //fpaso de flaot a uint32
+{
+   
+    temp_ctrl.target_temperature = temp;
     //xTaskNotify envia senyal per a que es vagi a estat posar temperatura
     return ESP_OK;
 }

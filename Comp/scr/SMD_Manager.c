@@ -13,9 +13,10 @@
 #define SMD_MANAGER_SIGNAL_SET_TEMP         (1 << 5)
 #define SMD_MANAGER_SIGNAL_SETTINGS         (1 << 6)
 #define SMD_MANAGER_SIGNAL_SOLDER           (1 << 7)
-#define SMD_MANAGER_SIGNAL_MORE_TEMP        (1 << 8)
-#define SMD_MANAGER_SIGNAL_LESS_TEMP        (1 << 9)
-#define SMD_MANAGER_SIGNAL_HEAT             (1 << 10)
+#define SMD_MANAGER_SIGNAL_KEY_MORE_TEMP    (1 << 8)
+#define SMD_MANAGER_SIGNAL_KEY_LESS_TEMP    (1 << 9)
+#define SMD_MANAGER_SIGNAL_KEY_HEAT         (1 << 10)
+#define SMD_MANAGER_SIGNAL_HEAT             (1 << 11)
 
 
 /*============================== Static Prototypes ==============================*/
@@ -25,6 +26,7 @@ static esp_err_t SMDManager_Starting(void);
 static uint32_t SMDManager_SignalWait(uint32_t signal, uint32_t timeout);
 
 void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer);
+void SMDManager_HeatUp_timer_Callback(void* arg);
 
 /*============================== Private Global Variables ==============================*/
 
@@ -34,7 +36,10 @@ typedef struct {
     SemaphoreHandle_t                xSemaphore;
 
     SolderingManagerState   state;
-    TimerHandle_t           Manager_SMD_UpdateTemperature_Timer;
+    TimerHandle_t           Manager_SMD_UpdateTemperature_Timer; // FreeRTOS timer handle
+    esp_timer_create_args_t    heatUp_timer_args; // esp_timer arguments
+    esp_timer_handle_t         heatUp_timer_handle; // esp_timer handle
+
 
     SMDManager_Configuration_t   config;
 
@@ -42,6 +47,9 @@ typedef struct {
     TempSensing_Configuration_t       tempSensingConfig;
 
     float                   temperature;
+    float                   target_temperature;
+
+
  
 } Manager_SMD;
 
@@ -152,6 +160,11 @@ esp_err_t SMDManager_Start(void){
 
 esp_err_t SMDManager_Starting(void){
     esp_err_t result = ESP_FAIL;
+
+    /*---Timers starting ----------*/
+    esp_timer_start_periodic(
+        mainSolder.heatUp_timer_handle, 
+        50000); // ms 
 
     result = Temp_Sensing_Start();
     vTaskDelay(pdMS_TO_TICKS(500)); // Delay for 500 mseconds
@@ -309,39 +322,55 @@ void SMDManager_Task(void *pvParameters){
                 }
 
                 mainSolder.temperature = TempSensing_GetTemperature();
+                TempCtrl_UpdateTemperature(mainSolder.temperature);
                 DisplayManager_SetTemperature(mainSolder.temperature);
-                ESP_LOGI("Display_Manager_Test_Task", "Setting temperature to: %.2f °C",  mainSolder.temperature);
+                ESP_LOGI("SMD_Manager_Task", "Setting temperature to: %.2f °C",  mainSolder.temperature);
                 vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 2000 mseconds
 
                 signal = SMDManager_SignalWait(SMD_MANAGER_SIGNAL_STOP | 
-                                                SMD_MANAGER_SIGNAL_RELEASE|
-                                                SMD_MANAGER_SIGNAL_MORE_TEMP|
-                                                SMD_MANAGER_SIGNAL_LESS_TEMP|
+                                                SMD_MANAGER_SIGNAL_KEY_HEAT|
+                                                SMD_MANAGER_SIGNAL_KEY_MORE_TEMP|
+                                                SMD_MANAGER_SIGNAL_KEY_LESS_TEMP|
                                                 SMD_MANAGER_SIGNAL_HEAT,
                                                 portMAX_DELAY);
 
                 if (signal & SMD_MANAGER_SIGNAL_STOP) {
-                    
+
+                    ESP_LOGI("SMD_Manager_Task", "SIGNAL_STOP");
+                    result = SMDManager_Stop();
+                    if (result == ESP_OK) {
+                        mainSolder.state = REQUESTED;
+                        if (mainSolder.config.callbacks.OperationCompleteCallback != NULL)
+                            mainSolder.config.callbacks.OperationCompleteCallback(DOSEMANAGER_RESULT_STOP);
+                    } else {
+                        ESP_LOGE("SMD_Manager_Task", "SMDManager_Stop failed");
+                    }
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_KEY_MORE_TEMP) {
+                    mainSolder.target_temperature += 5;
+                    ESP_LOGI("SMD_Manager_Task", "Temperature increased to: %.2f °C", mainSolder.temperature);
 
                 }
-                else if (signal & SMD_MANAGER_SIGNAL_RELEASE) {
-                    
+                else if (signal & SMD_MANAGER_SIGNAL_KEY_LESS_TEMP) {
+                    mainSolder.target_temperature -= 5;
+                    ESP_LOGI("SMD_Manager_Task", "Temperature decreased to: %.2f °C", mainSolder.temperature);
 
                 }
-                else if (signal & SMD_MANAGER_SIGNAL_MORE_TEMP) {
-                   
-
-                }
-                else if (signal & SMD_MANAGER_SIGNAL_LESS_TEMP) {
-                    
-
-                }
-                else if (signal & SMD_MANAGER_SIGNAL_HEAT) {
+                else if (signal & SMD_MANAGER_SIGNAL_KEY_HEAT) {
                     
                     TempCtrl_SetState(TEMP_CTRL_SET_TEMP);
+                    flag_to_start_hit_up = true;
 
-                    TempCtrl_SetTemperature(mainSolder.temperature);
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_HEAT) {                
+                    ESP_LOGI("SMD_Manager_Task", "SIGNAL HEAT received");
 
+                    if (flag_to_start_hit_up) {
+                        ESP_LOGI("SMD_Manager_Task", "Starting Heat Up Process");
+
+                        TempCtrl_SetTemperature(mainSolder.target_temperature);
+                       
+                    }
                 }
 
                 break;
@@ -383,14 +412,22 @@ esp_err_t SMDManager_Requesting(void){
 
    /*------------Define timers---------------*/
 
-    
-    
     mainSolder.Manager_SMD_UpdateTemperature_Timer = xTimerCreate(
                     "Manager_SMD_UpdateTemperature_Timer", // Name 
                      pdMS_TO_TICKS(5000),                  // Period of the timer
                      pdTRUE,                             // Auto-reload        
                      ( void * ) 0,                      // Timer ID
                     Manager_SMD_UpdateTemperature_Timer_Callback);
+
+
+
+    mainSolder.heatUp_timer_args = (esp_timer_create_args_t) {
+        .callback = &SMDManager_HeatUp_timer_Callback,
+        .arg = NULL,
+        .name = "HeatUpTimer"
+    };
+
+    esp_timer_create(&mainSolder.heatUp_timer_args, &mainSolder.heatUp_timer_handle);
 
     /* ..........Display_Manager ----------------*/
         // Callbaks for the module
@@ -440,11 +477,11 @@ void Manager_SMD_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer){
 
 }
 
-void SMDManager_HeatUp_timer(void* arg)
+void SMDManager_HeatUp_timer_Callback(void* arg)
 {
     if (mainSolder.state == SET_TEMP )
     {
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_HEAT, eSetBits);
     }
-    ESP_LOGI(TAG, "Timer triggered! Time since boot: %lld us", esp_timer_get_time());
+    ESP_LOGI("Callback", "Timer triggered! Time since boot: %lld us", esp_timer_get_time());
 }
