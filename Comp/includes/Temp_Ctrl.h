@@ -57,6 +57,7 @@ void TempCtrl_SetState(TempCtrlState state);
 
 esp_err_t config_pwm(void);
 esp_err_t set_pwm_duty(uint32_t duty);
+esp_err_t TempCtrlo_UpdateTemperature(uint32_t temperature);
 esp_err_t TempCtrl_SetTemperature(uint32_t temp);
 
 
@@ -70,7 +71,7 @@ esp_err_t TempCtrl_SetTemperature(uint32_t temp);
 #define Tmax 350 //Tempere max that hotplate can get
 
 
-uint64_t compute_pid(double setpoint, double current_temp);
+uint64_t Compute_pid(double setpoint, double current_temp);
 uint16_t Temperature2PWM(uint16_t temperature);
 
 void Test_PID_control_(void);
