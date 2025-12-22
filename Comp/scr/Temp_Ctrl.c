@@ -14,6 +14,8 @@ esp_err_t tempCtrl_Releasing(void);
 
 esp_err_t config_pwm(void);
 //esp_err_t set_pwm_duty(uint32_t duty);
+void TempCtrl_CalculateTemp(void);
+
 
 typedef struct {
     TempCtrlState                state;
@@ -33,6 +35,7 @@ typedef struct {
    
     uint32_t                        target_temperature;
     uint32_t                        temp;
+    uint32_t                        pid_output;
 
 } TempCtrl_t;
 
@@ -61,7 +64,7 @@ void Temp_Ctrl_Init(void){
         
        //Auria de mirar si necesita mutex o semaforo
        
-        esp_err_t ret = config_pwm(); // for shure configure but maby not start
+        esp_err_t ret = config_pwm(); 
         if (ret != ESP_OK) {
             ESP_LOGE("Temp_Ctrl_Init", "Failed to initialize PWM: %s", esp_err_to_name(ret));
             return;
@@ -262,8 +265,9 @@ void Temp_Ctrl_Release(void){
             signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP | TEMP_CTRL_SET_TEMP | TEMP_CTRL_SIGNAL_START,  portMAX_DELAY);
 
             if ( signal & TEMP_CTRL_SET_TEMP )
-            {
-                output = Compute_pid(temp_ctrl.target_temperature, temp_ctrl.temp);
+            {  
+                TempCtrl_CalculateTemp();
+         
             }
             
             else if ( signal & TEMP_CTRL_SIGNAL_START)
@@ -349,10 +353,12 @@ esp_err_t config_pwm(void){
        return ESP_OK;
    }
    
-   esp_err_t set_pwm_duty(uint32_t duty){ // set_temperature
-       ledc_set_duty(LEDC_HIGH_SPEED_MODE,LEDC_CHANNEL_0,duty);
+   esp_err_t set_pwm_duty(uint32_t duty)
+   { // set_temperature
        
-       ledc_update_duty (LEDC_HIGH_SPEED_MODE,LEDC_CHANNEL_0);
+        ledc_set_duty(LEDC_HIGH_SPEED_MODE,LEDC_CHANNEL_0,duty);
+       
+        ledc_update_duty (LEDC_HIGH_SPEED_MODE,LEDC_CHANNEL_0);
 
        ESP_LOGI("set_pwm_duty", "PWM duty set to %lu", duty);
    
@@ -406,7 +412,7 @@ void Test_PID_control_(){
 
 }
 
-esp_err_t TempCtrlo_UpdateTemperature(uint32_t temperature){ //fpaso de flaot a uint32
+esp_err_t TempCtrl_UpdateTemperature(uint32_t temperature){ //fpaso de flaot a uint32
     esp_err_t result = ESP_FAIL;
 
     temp_ctrl.temp = temperature;
@@ -418,9 +424,26 @@ esp_err_t TempCtrlo_UpdateTemperature(uint32_t temperature){ //fpaso de flaot a 
 esp_err_t TempCtrl_SetTemperature(uint32_t temp) //fpaso de flaot a uint32
 {
    
+    //may be i have to validate temp range
+    //may be i havt to check the conversion from float to uint32
+    
     temp_ctrl.target_temperature = temp;
-    //xTaskNotify envia senyal per a que es vagi a estat posar temperatura
+    xTaskNotify(temp_ctrl.taskHandle, TEMP_CTRL_SET_TEMP, eSetBits);
     return ESP_OK;
+}
+
+void TempCtrl_CalculateTemp(void)
+{
+    uint32_t aux_duty;
+    
+    temp_ctrl.pid_output = Compute_pid(temp_ctrl.target_temperature, temp_ctrl.temp);
+    ESP_LOGI("set_pwm_duty", "PWM duty set to %lu", temp_ctrl.pid_output);
+
+    aux_duty = (temp_ctrl.pid_output * 1023) / Tmax;
+    set_pwm_duty(aux_duty);
+
+    // For now, we'll just log that this function was called.
+    //ESP_LOGI("TempCtrl_CalculateTemp", "Calculating current temperature...");
 }
 
    

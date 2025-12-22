@@ -16,7 +16,8 @@
 #define SMD_MANAGER_SIGNAL_KEY_MORE_TEMP    (1 << 8)
 #define SMD_MANAGER_SIGNAL_KEY_LESS_TEMP    (1 << 9)
 #define SMD_MANAGER_SIGNAL_KEY_HEAT         (1 << 10)
-#define SMD_MANAGER_SIGNAL_HEAT             (1 << 11)
+#define SMD_MANAGER_SIGNAL_KEY_HOME         (1 << 11)
+#define SMD_MANAGER_SIGNAL_HEAT             (1 << 12)
 
 
 /*============================== Static Prototypes ==============================*/
@@ -49,6 +50,7 @@ typedef struct {
     float                   temperature;
     float                   target_temperature;
 
+    bool                    heat_up_process_active;
 
  
 } Manager_SMD;
@@ -322,7 +324,7 @@ void SMDManager_Task(void *pvParameters){
                 }
 
                 mainSolder.temperature = TempSensing_GetTemperature();
-                TempCtrl_UpdateTemperature(mainSolder.temperature);
+                
                 DisplayManager_SetTemperature(mainSolder.temperature);
                 ESP_LOGI("SMD_Manager_Task", "Setting temperature to: %.2f °C",  mainSolder.temperature);
                 vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 2000 mseconds
@@ -331,6 +333,7 @@ void SMDManager_Task(void *pvParameters){
                                                 SMD_MANAGER_SIGNAL_KEY_HEAT|
                                                 SMD_MANAGER_SIGNAL_KEY_MORE_TEMP|
                                                 SMD_MANAGER_SIGNAL_KEY_LESS_TEMP|
+                                                SMD_MANAGER_SIGNAL_KEY_HOME|
                                                 SMD_MANAGER_SIGNAL_HEAT,
                                                 portMAX_DELAY);
 
@@ -347,30 +350,37 @@ void SMDManager_Task(void *pvParameters){
                     }
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_KEY_MORE_TEMP) {
-                    mainSolder.target_temperature += 5;
+                    mainSolder.target_temperature += 1;
                     ESP_LOGI("SMD_Manager_Task", "Temperature increased to: %.2f °C", mainSolder.temperature);
 
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_KEY_LESS_TEMP) {
-                    mainSolder.target_temperature -= 5;
+                    mainSolder.target_temperature -= 1;
                     ESP_LOGI("SMD_Manager_Task", "Temperature decreased to: %.2f °C", mainSolder.temperature);
 
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_KEY_HEAT) {
                     
                     TempCtrl_SetState(TEMP_CTRL_SET_TEMP);
-                    flag_to_start_hit_up = true;
+                    mainSolder.heat_up_process_active = true;
 
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_HEAT) {                
                     ESP_LOGI("SMD_Manager_Task", "SIGNAL HEAT received");
 
-                    if (flag_to_start_hit_up) {
+                    TempCtrl_UpdateTemperature(mainSolder.temperature);
+                    
+                    if (mainSolder.heat_up_process_active) {
                         ESP_LOGI("SMD_Manager_Task", "Starting Heat Up Process");
 
                         TempCtrl_SetTemperature(mainSolder.target_temperature);
                        
                     }
+                }
+                else if (signal & SMD_MANAGER_SIGNAL_KEY_HOME) {
+                    mainSolder.state = IDLE;
+                    mainSolder.heat_up_process_active = false;
+                    ESP_LOGI("SMD_Manager_Task", "Returning to IDLE state");
                 }
 
                 break;

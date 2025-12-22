@@ -44,7 +44,8 @@ void Test_temperature_sensing_0(){
         //read the temperature from the amplifier of the sensro (MAX6675)
         float current_temperature = read_max6675(max6675); // temperature in Celsius
         if (current_temperature >= 0) {
-            ESP_LOGI("MAIN", "Temperature: %.2f°C", current_temperature);
+            //ESP_LOGI("MAIN", "Temperature: %.2f°C", current_temperature);
+            printf(">Temperature: %.2f°C\n", current_temperature);
         } else {
             ESP_LOGE("MAIN", "Failed to read temperature");
         }

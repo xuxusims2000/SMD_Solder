@@ -35,6 +35,7 @@ void test_function() {
 
     /*----------Module Temperature Control----------------------*/
     Test_Temp_Ctrl_1();
+    //Test_Temp_Ctrl_PID_TUNE();
 
 
     /*----------Module SMD Manager----------------------*/
