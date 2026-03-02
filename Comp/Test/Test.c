@@ -34,12 +34,12 @@ void test_function() {
     //Test_display_manager_2();
 
     /*----------Module Temperature Control----------------------*/
-    Test_Temp_Ctrl_1();
+    //Test_Temp_Ctrl_1();
     //Test_Temp_Ctrl_PID_TUNE();
 
 
     /*----------Module SMD Manager----------------------*/
-    //Test_smd_manager_1();
+    Test_smd_manager_1();
 
     
 
