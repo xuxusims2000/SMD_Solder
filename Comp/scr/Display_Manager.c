@@ -139,7 +139,7 @@ esp_err_t DisplayManager_SetTemperature(float temperature)
 
     static char temp_buffer[16];
     snprintf(temp_buffer, sizeof(temp_buffer), "%.2f °C", temperature);
-    lv_label_set_text(ui_varTemp, temp_buffer);
+    //lv_label_set_text(ui_varTemp, temp_buffer);
 
     result = ESP_OK;
 
@@ -199,7 +199,7 @@ void Display_Manager_Task(void *pvParameters)
             //_lock_release(&lvgl_api_lock2);
             vTaskDelay(pdMS_TO_TICKS(500)); // feeds watchdog  //shold do a semafor
 
-            lv_label_set_text(ui_varTemp, "25 °C");
+           // lv_label_set_text(ui_varTemp, "25 °C");
 
 
             break;
@@ -208,15 +208,15 @@ void Display_Manager_Task(void *pvParameters)
 
             lv_obj_t * current_screen = lv_scr_act(); // Get the active screen just once
 
-            if (current_screen == ui_Screen1) {
-                ESP_LOGI("Display_Manager_Task", "STATE: Screen 1 (Home)");
-            } else if (current_screen == ui_Screen2) {
+            //if (current_screen == ui_Screen1) {
+            //    ESP_LOGI("Display_Manager_Task", "STATE: Screen 1 (Home)");
+            //} else if (current_screen == ui_Screen2) {
             // Now you can specifically handle when Screen 2 is active
-            ESP_LOGI("Display_Manager_Task", "STATE: Screen 2 (Settings)");
-            } else {
+            //ESP_LOGI("Display_Manager_Task", "STATE: Screen 2 (Settings)");
+           // } else {
             // This handles any other screen that might exist, or if the screen is NULL
-            ESP_LOGW("Display_Manager_Task", "STATE: Unknown Screen active: %p", (void*)current_screen);
-            }
+            //ESP_LOGW("Display_Manager_Task", "STATE: Unknown Screen active: %p", (void*)current_screen);
+           // }
              
             /* La idea es fer que en fucnio de la pantalla que estigui 
             actualitzi els valors que siguin necesaris

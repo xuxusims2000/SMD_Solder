@@ -286,9 +286,9 @@ void SMDManager_Task(void *pvParameters){
                 ESP_LOGI("MAIN_SOLDER", "State: IDLE");
 
                 // Identify the current screen 
-                if (DisplayManager_GetScreen() != ui_Screen1) {
-                    ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
-                }
+               // if (DisplayManager_GetScreen() != ui_Screen1) {
+               //     ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
+                //}
          
                 
                 
@@ -337,9 +337,9 @@ void SMDManager_Task(void *pvParameters){
             
             case SET_TEMP:
                 // Identify the current screen 
-                if (DisplayManager_GetScreen() != ui_Screen1) {  // MODIFY THE ACTUALL SCREEN WHE SCREENS ARE DEFINED
-                    ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
-                }
+               // if (DisplayManager_GetScreen() != ui_Screen1) {  // MODIFY THE ACTUALL SCREEN WHE SCREENS ARE DEFINED
+                //    ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
+                //}
 
                 mainSolder.temperature = TempSensing_GetTemperature();
                 

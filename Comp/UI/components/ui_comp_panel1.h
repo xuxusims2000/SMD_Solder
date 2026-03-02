@@ -3,16 +3,19 @@
 // LVGL version: 9.2.2
 // Project name: SMD_Solder_v0.0.1
 
-#ifndef _UI_EVENTS_H
-#define _UI_EVENTS_H
+#ifndef _UI_COMP_PANEL1_H
+#define _UI_COMP_PANEL1_H
+
+#include "../ui.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void InecreaseTemp(lv_event_t * e);
-void Heat(lv_event_t * e);
-void DecreaseTemp(lv_event_t * e);
+// COMPONENT Panel1
+#define UI_COMP_PANEL1_PANEL1 0
+#define _UI_COMP_PANEL1_NUM 1
+lv_obj_t * ui_Panel1_create(lv_obj_t * comp_parent);
 
 #ifdef __cplusplus
 } /*extern "C"*/
