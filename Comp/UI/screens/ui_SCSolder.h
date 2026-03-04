@@ -14,15 +14,18 @@ extern "C" {
 extern void ui_SCSolder_screen_init(void);
 extern void ui_SCSolder_screen_destroy(void);
 extern lv_obj_t * ui_SCSolder;
-extern void ui_event_Button10(lv_event_t * e);
-extern lv_obj_t * ui_Button10;
-extern lv_obj_t * ui_Label11;
-extern lv_obj_t * ui_Label12;
+extern void ui_event_BHome2(lv_event_t * e);
+extern lv_obj_t * ui_BHome2;
+extern lv_obj_t * ui_TStatus;
+extern lv_obj_t * ui_ValTemp3;
 extern lv_obj_t * ui_Chart3;
 extern lv_obj_t * ui_Chart3_Xaxis;
 extern lv_obj_t * ui_Chart3_Yaxis1;
 extern lv_obj_t * ui_Chart3_Yaxis2;
 // CUSTOM VARIABLES
+extern lv_obj_t * uic_BHome2;
+extern lv_obj_t * uic_TStatus;
+extern lv_obj_t * uic_ValTemp3;
 
 #ifdef __cplusplus
 } /*extern "C"*/

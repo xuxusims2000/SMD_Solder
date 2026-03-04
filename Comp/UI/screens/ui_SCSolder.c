@@ -5,16 +5,19 @@
 
 #include "../ui.h"
 
+lv_obj_t * uic_ValTemp3;
+lv_obj_t * uic_TStatus;
+lv_obj_t * uic_BHome2;
 lv_obj_t * ui_SCSolder = NULL;
-lv_obj_t * ui_Button10 = NULL;
-lv_obj_t * ui_Label11 = NULL;
-lv_obj_t * ui_Label12 = NULL;
+lv_obj_t * ui_BHome2 = NULL;
+lv_obj_t * ui_TStatus = NULL;
+lv_obj_t * ui_ValTemp3 = NULL;
 lv_obj_t * ui_Chart3 = NULL;
 lv_obj_t * ui_Chart3_Xaxis = NULL;
 lv_obj_t * ui_Chart3_Yaxis1 = NULL;
 lv_obj_t * ui_Chart3_Yaxis2 = NULL;
 // event funtions
-void ui_event_Button10(lv_event_t * e)
+void ui_event_BHome2(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
 
@@ -31,47 +34,47 @@ void ui_SCSolder_screen_init(void)
     lv_obj_remove_flag(ui_SCSolder, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_image_src(ui_SCSolder, &ui_img_bk_dark_png, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Button10 = lv_button_create(ui_SCSolder);
-    lv_obj_set_width(ui_Button10, 42);
-    lv_obj_set_height(ui_Button10, 43);
-    lv_obj_set_x(ui_Button10, 86);
-    lv_obj_set_y(ui_Button10, -134);
-    lv_obj_set_align(ui_Button10, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Button10, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_remove_flag(ui_Button10, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_radius(ui_Button10, 44, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_Button10, lv_color_hex(0x253A24), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Button10, 190, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_image_src(ui_Button10, &ui_img_home3_png, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_BHome2 = lv_button_create(ui_SCSolder);
+    lv_obj_set_width(ui_BHome2, 42);
+    lv_obj_set_height(ui_BHome2, 43);
+    lv_obj_set_x(ui_BHome2, 86);
+    lv_obj_set_y(ui_BHome2, -134);
+    lv_obj_set_align(ui_BHome2, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_BHome2, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_remove_flag(ui_BHome2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_radius(ui_BHome2, 44, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_BHome2, lv_color_hex(0x253A24), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_BHome2, 190, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_image_src(ui_BHome2, &ui_img_home3_png, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Label11 = lv_label_create(ui_SCSolder);
-    lv_obj_set_width(ui_Label11, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label11, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label11, -1);
-    lv_obj_set_y(ui_Label11, -29);
-    lv_obj_set_align(ui_Label11, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label11, "Status : Soldering");
-    lv_obj_set_style_text_color(ui_Label11, lv_color_hex(0x29CE20), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label11, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Label11, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_TStatus = lv_label_create(ui_SCSolder);
+    lv_obj_set_width(ui_TStatus, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_TStatus, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_TStatus, -1);
+    lv_obj_set_y(ui_TStatus, -29);
+    lv_obj_set_align(ui_TStatus, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_TStatus, "Status : Soldering");
+    lv_obj_set_style_text_color(ui_TStatus, lv_color_hex(0x29CE20), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_TStatus, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_TStatus, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Label12 = lv_label_create(ui_SCSolder);
-    lv_obj_set_width(ui_Label12, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label12, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label12, 1);
-    lv_obj_set_y(ui_Label12, -83);
-    lv_obj_set_align(ui_Label12, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label12, "25 °C");
-    lv_obj_set_style_text_color(ui_Label12, lv_color_hex(0x29CE20), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label12, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Label12, &lv_font_montserrat_36, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_radius(ui_Label12, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_Label12, lv_color_hex(0x3AB634), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Label12, 100, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_color(ui_Label12, lv_color_hex(0x179130), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_opa(ui_Label12, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_width(ui_Label12, 75, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_spread(ui_Label12, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_ValTemp3 = lv_label_create(ui_SCSolder);
+    lv_obj_set_width(ui_ValTemp3, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValTemp3, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_ValTemp3, 1);
+    lv_obj_set_y(ui_ValTemp3, -83);
+    lv_obj_set_align(ui_ValTemp3, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ValTemp3, "25 °C");
+    lv_obj_set_style_text_color(ui_ValTemp3, lv_color_hex(0x29CE20), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValTemp3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValTemp3, &lv_font_montserrat_36, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_ValTemp3, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_ValTemp3, lv_color_hex(0x3AB634), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_ValTemp3, 100, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_ValTemp3, lv_color_hex(0x179130), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_opa(ui_ValTemp3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(ui_ValTemp3, 75, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_spread(ui_ValTemp3, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Chart3 = lv_chart_create(ui_SCSolder);
     lv_obj_set_width(ui_Chart3, 172);
@@ -134,7 +137,10 @@ void ui_SCSolder_screen_init(void)
     lv_obj_set_style_outline_pad(ui_Chart3, LV_MAX3(50, 50, 25),
                                  LV_PART_MAIN | LV_STATE_DEFAULT);   //workaround for ineffective 'overflow visible' flag
     lv_obj_set_style_outline_width(ui_Chart3, -1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_event_cb(ui_Button10, ui_event_Button10, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_BHome2, ui_event_BHome2, LV_EVENT_ALL, NULL);
+    uic_BHome2 = ui_BHome2;
+    uic_TStatus = ui_TStatus;
+    uic_ValTemp3 = ui_ValTemp3;
 
 }
 
@@ -144,9 +150,12 @@ void ui_SCSolder_screen_destroy(void)
 
     // NULL screen variables
     ui_SCSolder = NULL;
-    ui_Button10 = NULL;
-    ui_Label11 = NULL;
-    ui_Label12 = NULL;
+    uic_BHome2 = NULL;
+    ui_BHome2 = NULL;
+    uic_TStatus = NULL;
+    ui_TStatus = NULL;
+    uic_ValTemp3 = NULL;
+    ui_ValTemp3 = NULL;
     ui_Chart3 = NULL;
 
 }

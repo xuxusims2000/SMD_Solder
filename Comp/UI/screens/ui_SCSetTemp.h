@@ -15,16 +15,27 @@ extern void ui_SCSetTemp_screen_init(void);
 extern void ui_SCSetTemp_screen_destroy(void);
 extern lv_obj_t * ui_SCSetTemp;
 extern lv_obj_t * ui_ValTemp2;
-extern void ui_event_Button5(lv_event_t * e);
-extern lv_obj_t * ui_Button5;
-extern void ui_event_Button2(lv_event_t * e);
-extern lv_obj_t * ui_Button2;
-extern void ui_event_Button6(lv_event_t * e);
-extern lv_obj_t * ui_Button6;
-extern lv_obj_t * ui_Label9;
-extern void ui_event_Button1(lv_event_t * e);
-extern lv_obj_t * ui_Button1;
+extern void ui_event_BLesTemp(lv_event_t * e);
+extern lv_obj_t * ui_BLesTemp;
+extern void ui_event_BHeat(lv_event_t * e);
+extern lv_obj_t * ui_BHeat;
+extern lv_obj_t * ui_THeat;
+extern void ui_event_BMorTemp(lv_event_t * e);
+extern lv_obj_t * ui_BMorTemp;
+extern void ui_event_BHome1(lv_event_t * e);
+extern lv_obj_t * ui_BHome1;
+extern lv_obj_t * ui_ValActualTemp;
+extern lv_obj_t * ui_TDesired;
+extern lv_obj_t * ui_TReal;
 // CUSTOM VARIABLES
+extern lv_obj_t * uic_ValTemp2;
+extern lv_obj_t * uic_BLesTemp;
+extern lv_obj_t * uic_BHeat;
+extern lv_obj_t * uic_THeat;
+extern lv_obj_t * uic_BMorTemp;
+extern lv_obj_t * uic_BHome1;
+extern lv_obj_t * uic_ValActualTemp;
+extern lv_obj_t * uic_TReal;
 
 #ifdef __cplusplus
 } /*extern "C"*/

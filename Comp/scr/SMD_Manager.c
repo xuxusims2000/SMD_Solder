@@ -286,8 +286,8 @@ void SMDManager_Task(void *pvParameters){
                 ESP_LOGI("MAIN_SOLDER", "State: IDLE");
 
                 // Identify the current screen 
-               // if (DisplayManager_GetScreen() != ui_Screen1) {
-               //     ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
+               //if (DisplayManager_GetScreen() != ui_SCHome) {
+                //   ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
                 //}
          
                 
@@ -305,6 +305,8 @@ void SMDManager_Task(void *pvParameters){
                                                 SMD_MANAGER_SIGNAL_SETTINGS| 
                                                 SMD_MANAGER_SIGNAL_UPDATE_TEMP,
                                                 portMAX_DELAY);
+
+                 ESP_LOGI("Display_Manager_Test_Task", "Signal wait completed");
 
                 if (signal & SMD_MANAGER_SIGNAL_STOP) {
                     
@@ -442,7 +444,7 @@ esp_err_t SMDManager_Requesting(void){
 
     mainSolder.SMDManager_UpdateTemperature_Timer = xTimerCreate(
                     "Manager_SMD_UpdateTemperature_Timer", // Name 
-                     pdMS_TO_TICKS(100),                  // Period of the timer
+                     pdMS_TO_TICKS(1000),                  // Period of the timer
                      pdTRUE,                             // Auto-reload        
                     ( void * ) 0,                      // Timer ID
                     SMDManager_UpdateTemperature_Timer_Callback);
@@ -512,11 +514,10 @@ void SMDManager_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer){
         if ( mainSolder.state == IDLE)
     {
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_UPDATE_TEMP, eSetBits);
+        ESP_LOGI("Timer_Callback", "SMDManager_UpdateTemperature_Timer_Callback executed");
     }
-    ESP_LOGI("Timer_Callback", "SMDManager_UpdateTemperature_Timer_Callback executed");
-
+    
     //Manager_SMD_SignalSet(MANAGER_SMD_SIGNAL_UPDATE_TEMPERATURE);
-
 }
 
 /*

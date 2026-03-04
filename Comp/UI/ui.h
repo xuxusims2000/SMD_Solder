@@ -23,7 +23,7 @@ extern "C" {
 #include "screens/ui_SCLolos.h"
 #include "screens/ui_SCHome.h"
 #include "screens/ui_SCSolder.h"
-#include "screens/ui_SCSettings.h"
+#include "screens/ui_TFunction.h"
 #include "screens/ui_SCSetTemp.h"
 
 ///////////////////// VARIABLES ////////////////////

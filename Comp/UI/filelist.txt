@@ -3,7 +3,7 @@ components/ui_comp.c
 screens/ui_SCLolos.c
 screens/ui_SCHome.c
 screens/ui_SCSolder.c
-screens/ui_SCSettings.c
+screens/ui_TFunction.c
 screens/ui_SCSetTemp.c
 ui.c
 components/ui_comp_hook.c

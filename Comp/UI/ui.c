@@ -35,7 +35,7 @@ void ui_init(void)
     ui_SCLolos_screen_init();
     ui_SCHome_screen_init();
     ui_SCSolder_screen_init();
-    ui_SCSettings_screen_init();
+    ui_TFunction_screen_init();
     ui_SCSetTemp_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_SCLolos);
@@ -46,6 +46,6 @@ void ui_destroy(void)
     ui_SCLolos_screen_destroy();
     ui_SCHome_screen_destroy();
     ui_SCSolder_screen_destroy();
-    ui_SCSettings_screen_destroy();
+    ui_TFunction_screen_destroy();
     ui_SCSetTemp_screen_destroy();
 }

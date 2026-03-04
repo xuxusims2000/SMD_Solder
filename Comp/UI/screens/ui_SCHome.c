@@ -6,16 +6,20 @@
 #include "../ui.h"
 
 lv_obj_t * uic_ValTemp;
+lv_obj_t * uic_TSettings;
+lv_obj_t * uic_BSettings;
+lv_obj_t * uic_TSetTemp;
+lv_obj_t * uic_BSetTemp;
 lv_obj_t * ui_SCHome = NULL;
-lv_obj_t * ui_BSetTemperature = NULL;
-lv_obj_t * ui_Button3 = NULL;
-lv_obj_t * ui_Button4 = NULL;
-lv_obj_t * ui_Label6 = NULL;
-lv_obj_t * ui_Label2 = NULL;
-lv_obj_t * ui_Label3 = NULL;
+lv_obj_t * ui_BSolder = NULL;
+lv_obj_t * ui_TextSolder = NULL;
+lv_obj_t * ui_BSetTemp = NULL;
+lv_obj_t * ui_TSetTemp = NULL;
+lv_obj_t * ui_BSettings = NULL;
+lv_obj_t * ui_TSettings = NULL;
 lv_obj_t * ui_ValTemp1 = NULL;
 // event funtions
-void ui_event_BSetTemperature(lv_event_t * e)
+void ui_event_BSolder(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
 
@@ -24,7 +28,7 @@ void ui_event_BSetTemperature(lv_event_t * e)
     }
 }
 
-void ui_event_Button3(lv_event_t * e)
+void ui_event_BSetTemp(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
 
@@ -33,12 +37,12 @@ void ui_event_Button3(lv_event_t * e)
     }
 }
 
-void ui_event_Button4(lv_event_t * e)
+void ui_event_BSettings(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
 
     if(event_code == LV_EVENT_RELEASED) {
-        _ui_screen_change(&ui_SCSettings, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_SCSettings_screen_init);
+        _ui_screen_change(&ui_TFunction, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_TFunction_screen_init);
     }
 }
 
@@ -50,71 +54,71 @@ void ui_SCHome_screen_init(void)
     lv_obj_remove_flag(ui_SCHome, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_image_src(ui_SCHome, &ui_img_bk_dark_png, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_BSetTemperature = lv_button_create(ui_SCHome);
-    lv_obj_set_width(ui_BSetTemperature, 126);
-    lv_obj_set_height(ui_BSetTemperature, 34);
-    lv_obj_set_x(ui_BSetTemperature, 3);
-    lv_obj_set_y(ui_BSetTemperature, -15);
-    lv_obj_set_align(ui_BSetTemperature, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_BSetTemperature, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_remove_flag(ui_BSetTemperature, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_radius(ui_BSetTemperature, 44, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_BSetTemperature, lv_color_hex(0x253A24), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_BSetTemperature, 190, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_BSolder = lv_button_create(ui_SCHome);
+    lv_obj_set_width(ui_BSolder, 126);
+    lv_obj_set_height(ui_BSolder, 34);
+    lv_obj_set_x(ui_BSolder, 3);
+    lv_obj_set_y(ui_BSolder, -15);
+    lv_obj_set_align(ui_BSolder, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_BSolder, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_remove_flag(ui_BSolder, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_radius(ui_BSolder, 44, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_BSolder, lv_color_hex(0x253A24), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_BSolder, 190, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Button3 = lv_button_create(ui_SCHome);
-    lv_obj_set_width(ui_Button3, 126);
-    lv_obj_set_height(ui_Button3, 34);
-    lv_obj_set_x(ui_Button3, 2);
-    lv_obj_set_y(ui_Button3, 39);
-    lv_obj_set_align(ui_Button3, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Button3, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_remove_flag(ui_Button3, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_radius(ui_Button3, 44, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_Button3, lv_color_hex(0x253A24), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Button3, 190, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_TextSolder = lv_label_create(ui_BSolder);
+    lv_obj_set_width(ui_TextSolder, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_TextSolder, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_TextSolder, -2);
+    lv_obj_set_y(ui_TextSolder, 0);
+    lv_obj_set_align(ui_TextSolder, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_TextSolder, "Solder");
+    lv_obj_set_style_text_color(ui_TextSolder, lv_color_hex(0x2FAB3F), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_TextSolder, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Button4 = lv_button_create(ui_SCHome);
-    lv_obj_set_width(ui_Button4, 126);
-    lv_obj_set_height(ui_Button4, 34);
-    lv_obj_set_x(ui_Button4, 3);
-    lv_obj_set_y(ui_Button4, 98);
-    lv_obj_set_align(ui_Button4, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Button4, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_remove_flag(ui_Button4, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_radius(ui_Button4, 44, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_Button4, lv_color_hex(0x253A24), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Button4, 190, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_BSetTemp = lv_button_create(ui_SCHome);
+    lv_obj_set_width(ui_BSetTemp, 126);
+    lv_obj_set_height(ui_BSetTemp, 34);
+    lv_obj_set_x(ui_BSetTemp, 2);
+    lv_obj_set_y(ui_BSetTemp, 39);
+    lv_obj_set_align(ui_BSetTemp, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_BSetTemp, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_remove_flag(ui_BSetTemp, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_radius(ui_BSetTemp, 44, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_BSetTemp, lv_color_hex(0x253A24), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_BSetTemp, 190, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Label6 = lv_label_create(ui_SCHome);
-    lv_obj_set_width(ui_Label6, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label6, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label6, 4);
-    lv_obj_set_y(ui_Label6, -16);
-    lv_obj_set_align(ui_Label6, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label6, "Solder");
-    lv_obj_set_style_text_color(ui_Label6, lv_color_hex(0x2FAB3F), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label6, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_TSetTemp = lv_label_create(ui_BSetTemp);
+    lv_obj_set_width(ui_TSetTemp, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_TSetTemp, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_TSetTemp, 2);
+    lv_obj_set_y(ui_TSetTemp, 0);
+    lv_obj_set_align(ui_TSetTemp, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_TSetTemp, "Set Temp");
+    lv_obj_set_style_text_color(ui_TSetTemp, lv_color_hex(0x2FAB3F), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_TSetTemp, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Label2 = lv_label_create(ui_SCHome);
-    lv_obj_set_width(ui_Label2, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label2, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label2, 3);
-    lv_obj_set_y(ui_Label2, 96);
-    lv_obj_set_align(ui_Label2, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label2, "Settings");
-    lv_obj_set_style_text_color(ui_Label2, lv_color_hex(0x2FAB3F), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_BSettings = lv_button_create(ui_SCHome);
+    lv_obj_set_width(ui_BSettings, 126);
+    lv_obj_set_height(ui_BSettings, 34);
+    lv_obj_set_x(ui_BSettings, 3);
+    lv_obj_set_y(ui_BSettings, 98);
+    lv_obj_set_align(ui_BSettings, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_BSettings, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_remove_flag(ui_BSettings, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_radius(ui_BSettings, 44, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_BSettings, lv_color_hex(0x253A24), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_BSettings, 190, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Label3 = lv_label_create(ui_SCHome);
-    lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label3, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label3, 1);
-    lv_obj_set_y(ui_Label3, 39);
-    lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label3, "Set Temp");
-    lv_obj_set_style_text_color(ui_Label3, lv_color_hex(0x2FAB3F), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_TSettings = lv_label_create(ui_BSettings);
+    lv_obj_set_width(ui_TSettings, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_TSettings, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_TSettings, 2);
+    lv_obj_set_y(ui_TSettings, 0);
+    lv_obj_set_align(ui_TSettings, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_TSettings, "Settings");
+    lv_obj_set_style_text_color(ui_TSettings, lv_color_hex(0x2FAB3F), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_TSettings, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_ValTemp1 = lv_label_create(ui_SCHome);
     lv_obj_set_width(ui_ValTemp1, LV_SIZE_CONTENT);   /// 1
@@ -134,9 +138,13 @@ void ui_SCHome_screen_init(void)
     lv_obj_set_style_shadow_width(ui_ValTemp1, 75, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_shadow_spread(ui_ValTemp1, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_add_event_cb(ui_BSetTemperature, ui_event_BSetTemperature, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_Button3, ui_event_Button3, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_Button4, ui_event_Button4, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_BSolder, ui_event_BSolder, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_BSetTemp, ui_event_BSetTemp, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_BSettings, ui_event_BSettings, LV_EVENT_ALL, NULL);
+    uic_BSetTemp = ui_BSetTemp;
+    uic_TSetTemp = ui_TSetTemp;
+    uic_BSettings = ui_BSettings;
+    uic_TSettings = ui_TSettings;
     uic_ValTemp = ui_ValTemp1;
 
 }
@@ -147,12 +155,16 @@ void ui_SCHome_screen_destroy(void)
 
     // NULL screen variables
     ui_SCHome = NULL;
-    ui_BSetTemperature = NULL;
-    ui_Button3 = NULL;
-    ui_Button4 = NULL;
-    ui_Label6 = NULL;
-    ui_Label2 = NULL;
-    ui_Label3 = NULL;
+    ui_BSolder = NULL;
+    ui_TextSolder = NULL;
+    uic_BSetTemp = NULL;
+    ui_BSetTemp = NULL;
+    uic_TSetTemp = NULL;
+    ui_TSetTemp = NULL;
+    uic_BSettings = NULL;
+    ui_BSettings = NULL;
+    uic_TSettings = NULL;
+    ui_TSettings = NULL;
     uic_ValTemp = NULL;
     ui_ValTemp1 = NULL;
 

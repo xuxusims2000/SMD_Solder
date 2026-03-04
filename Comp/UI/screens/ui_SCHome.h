@@ -14,17 +14,21 @@ extern "C" {
 extern void ui_SCHome_screen_init(void);
 extern void ui_SCHome_screen_destroy(void);
 extern lv_obj_t * ui_SCHome;
-extern void ui_event_BSetTemperature(lv_event_t * e);
-extern lv_obj_t * ui_BSetTemperature;
-extern void ui_event_Button3(lv_event_t * e);
-extern lv_obj_t * ui_Button3;
-extern void ui_event_Button4(lv_event_t * e);
-extern lv_obj_t * ui_Button4;
-extern lv_obj_t * ui_Label6;
-extern lv_obj_t * ui_Label2;
-extern lv_obj_t * ui_Label3;
+extern void ui_event_BSolder(lv_event_t * e);
+extern lv_obj_t * ui_BSolder;
+extern lv_obj_t * ui_TextSolder;
+extern void ui_event_BSetTemp(lv_event_t * e);
+extern lv_obj_t * ui_BSetTemp;
+extern lv_obj_t * ui_TSetTemp;
+extern void ui_event_BSettings(lv_event_t * e);
+extern lv_obj_t * ui_BSettings;
+extern lv_obj_t * ui_TSettings;
 extern lv_obj_t * ui_ValTemp1;
 // CUSTOM VARIABLES
+extern lv_obj_t * uic_BSetTemp;
+extern lv_obj_t * uic_TSetTemp;
+extern lv_obj_t * uic_BSettings;
+extern lv_obj_t * uic_TSettings;
 extern lv_obj_t * uic_ValTemp;
 
 #ifdef __cplusplus

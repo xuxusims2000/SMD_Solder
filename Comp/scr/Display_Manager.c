@@ -139,7 +139,7 @@ esp_err_t DisplayManager_SetTemperature(float temperature)
 
     static char temp_buffer[16];
     snprintf(temp_buffer, sizeof(temp_buffer), "%.2f °C", temperature);
-    //lv_label_set_text(ui_varTemp, temp_buffer);
+    lv_label_set_text(ui_ValTemp1, temp_buffer);
 
     result = ESP_OK;
 
@@ -208,20 +208,25 @@ void Display_Manager_Task(void *pvParameters)
 
             lv_obj_t * current_screen = lv_scr_act(); // Get the active screen just once
 
-            //if (current_screen == ui_Screen1) {
-            //    ESP_LOGI("Display_Manager_Task", "STATE: Screen 1 (Home)");
-            //} else if (current_screen == ui_Screen2) {
-            // Now you can specifically handle when Screen 2 is active
-            //ESP_LOGI("Display_Manager_Task", "STATE: Screen 2 (Settings)");
-           // } else {
-            // This handles any other screen that might exist, or if the screen is NULL
-            //ESP_LOGW("Display_Manager_Task", "STATE: Unknown Screen active: %p", (void*)current_screen);
-           // }
-             
-            /* La idea es fer que en fucnio de la pantalla que estigui 
-            actualitzi els valors que siguin necesaris
-                La pregunta es faig un altre estat? com gestion aquests estats
-                - podria fer que sactualitzes tot tot el rato ?*/
+            if (current_screen == ui_SCLolos) {
+                ESP_LOGI("Display_Manager_Task", "Active screen ui_SCLolos");   
+            }
+            else if (current_screen == ui_SCHome) {
+                ESP_LOGI("Display_Manager_Task", "Active screen ui_SCHome");   
+            }
+            else if (current_screen == ui_SCSolder) {
+                ESP_LOGI("Display_Manager_Task", "Active screen ui_SCSolder");   
+            }
+            else if (current_screen == ui_TFunction) {
+                ESP_LOGI("Display_Manager_Task", "Active screen ui_TFunction");   
+            }
+            else if (current_screen == ui_SCSetTemp) {
+                ESP_LOGI("Display_Manager_Task", "Active screen ui_SCSetTemp");   
+            }
+            else {
+                ESP_LOGW("Display_Manager_Task", "Unknown active screen: %p", (void*)current_screen);
+            }
+            
 
             signal = DisplayManagerSignalWait(DISPLAY_MANAGER_SIGNAL_STOP, portMAX_DELAY);
             if (signal & DISPLAY_MANAGER_SIGNAL_STOP) {
