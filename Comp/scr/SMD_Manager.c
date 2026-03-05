@@ -286,16 +286,34 @@ void SMDManager_Task(void *pvParameters){
                 ESP_LOGI("MAIN_SOLDER", "State: IDLE");
 
                 // Identify the current screen 
-               //if (DisplayManager_GetScreen() != ui_SCHome) {
-                //   ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
-                //}
+                lv_obj_t *screen = DisplayManager_GetScreen();
+                if (screen == NULL) {
+                    ESP_LOGW("MAIN_SOLDER", "Current screen is NULL");
+                } else if (screen == ui_SCHome) {
+                    ESP_LOGI("MAIN_SOLDER", "Current screen: Home");
+                } else if (screen == ui_SCLolos) {
+                    ESP_LOGI("MAIN_SOLDER", "Current screen: Splash (Lolos)");
+                } else if (screen == ui_SCSolder) {
+                    ESP_LOGI("MAIN_SOLDER", "Current screen: Solder");
+                } else if (screen == ui_TFunction) {
+                    ESP_LOGI("MAIN_SOLDER", "Current screen: Function");
+                } else if (screen == ui_SCSetTemp) {
+                    ESP_LOGI("MAIN_SOLDER", "Current screen: SetTemp");
+                } else {
+                    ESP_LOGI("MAIN_SOLDER", "Current screen: unknown %p", (void*)screen);
+                }
+
+                // ensure home screen is active otherwise switch
+                if (screen != ui_SCHome) {
+                    ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
+                }
          
                 
                 
-                mainSolder.temperature = TempSensing_GetTemperature();
-                DisplayManager_SetTemperature(mainSolder.temperature);
-                ESP_LOGI("Display_Manager_Test_Task", "Setting temperature to: %.2f °C",  mainSolder.temperature);
-                vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 2000 mseconds
+                //mainSolder.temperature = TempSensing_GetTemperature();
+                //DisplayManager_SetTemperature(mainSolder.temperature);
+                //ESP_LOGI("Display_Manager_Test_Task", "Setting temperature to: %.2f °C",  mainSolder.temperature);
+                //vTaskDelay(pdMS_TO_TICKS(500)); // Delay for 500 mseconds
 
                 
                 signal = SMDManager_SignalWait(SMD_MANAGER_SIGNAL_STOP | 
@@ -340,8 +358,8 @@ void SMDManager_Task(void *pvParameters){
             case SET_TEMP:
                 // Identify the current screen 
                // if (DisplayManager_GetScreen() != ui_Screen1) {  // MODIFY THE ACTUALL SCREEN WHE SCREENS ARE DEFINED
-                //    ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
-                //}
+                    //ESP_LOGI("MAIN_SOLDER", "Switching to Home Screen");
+               // }
 
                 mainSolder.temperature = TempSensing_GetTemperature();
                 
