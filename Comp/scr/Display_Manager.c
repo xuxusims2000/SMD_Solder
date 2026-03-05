@@ -131,20 +131,9 @@ esp_err_t DisplayManager_Release(void)
     return ESP_OK;
 }
 
-esp_err_t DisplayManager_SetTemperature(float temperature)
-{
-    esp_err_t result = ESP_FAIL;
 
-    display_manager.temperature = temperature;
 
-    static char temp_buffer[16];
-    snprintf(temp_buffer, sizeof(temp_buffer), "%.2f °C", temperature);
-    lv_label_set_text(ui_varTemp, temp_buffer);
 
-    result = ESP_OK;
-
-    return result;
-}
 
 lv_obj_t* DisplayManager_GetScreen(void)
 {
@@ -199,7 +188,7 @@ void Display_Manager_Task(void *pvParameters)
             //_lock_release(&lvgl_api_lock2);
             vTaskDelay(pdMS_TO_TICKS(500)); // feeds watchdog  //shold do a semafor
 
-            lv_label_set_text(ui_varTemp, "25 °C");
+            lv_label_set_text(ui_ValTemp1, "25 °C");
 
 
             break;
@@ -208,14 +197,20 @@ void Display_Manager_Task(void *pvParameters)
 
             lv_obj_t * current_screen = lv_scr_act(); // Get the active screen just once
 
-            if (current_screen == ui_Screen1) {
-                ESP_LOGI("Display_Manager_Task", "STATE: Screen 1 (Home)");
-            } else if (current_screen == ui_Screen2) {
-            // Now you can specifically handle when Screen 2 is active
-            ESP_LOGI("Display_Manager_Task", "STATE: Screen 2 (Settings)");
+            if (current_screen == NULL) {
+                ESP_LOGW("Display_Manager_Task", "STATE: Screen is NULL");
+            } else if (current_screen == ui_SCLolos) {
+                ESP_LOGI("Display_Manager_Task", "STATE: Splash (Lolos)");
+            } else if (current_screen == ui_SCHome) {
+                ESP_LOGI("Display_Manager_Task", "STATE: Home");
+            } else if (current_screen == ui_SCSolder) {
+                ESP_LOGI("Display_Manager_Task", "STATE: Solder");
+            } else if (current_screen == ui_TFunction) {
+                ESP_LOGI("Display_Manager_Task", "STATE: Function");
+            } else if (current_screen == ui_SCSetTemp) {
+                ESP_LOGI("Display_Manager_Task", "STATE: SetTemp");
             } else {
-            // This handles any other screen that might exist, or if the screen is NULL
-            ESP_LOGW("Display_Manager_Task", "STATE: Unknown Screen active: %p", (void*)current_screen);
+                ESP_LOGW("Display_Manager_Task", "STATE: Unknown Screen active: %p", (void*)current_screen);
             }
              
             /* La idea es fer que en fucnio de la pantalla que estigui 
@@ -248,7 +243,7 @@ void Display_Manager_Task(void *pvParameters)
             break;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
@@ -428,6 +423,38 @@ void DisplayManager_SetState(DisplayManagerState state)
     
 
     display_manager.state = state;
+}
+
+// Callback for thread-safe LVGL temperature update
+static void DisplayManager_SetTemperature_Callback(void* param)
+{
+    float* temperature = (float*)param;
+    if (temperature != NULL) {
+        static char temp_buffer[16];
+        snprintf(temp_buffer, sizeof(temp_buffer), "%.2f °C", *temperature);
+        lv_label_set_text(ui_ValTemp1, temp_buffer);
+        free(temperature);
+    }
+}
+
+esp_err_t DisplayManager_SetTemperature(float temperature)
+{
+    esp_err_t result = ESP_FAIL;
+
+    display_manager.temperature = temperature;
+
+    // Allocate float copy for async callback
+    float* temp_copy = malloc(sizeof(float));
+    if (temp_copy != NULL) {
+        *temp_copy = temperature;
+        // Queue the update to run safely in LVGL context
+        lv_async_call(DisplayManager_SetTemperature_Callback, temp_copy);
+        result = ESP_OK;
+    } else {
+        result = ESP_FAIL;
+    }
+
+    return result;
 }
 
 

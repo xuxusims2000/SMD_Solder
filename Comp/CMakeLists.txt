@@ -1,3 +1,6 @@
+# Collect all UI source files automatically
+file(GLOB_RECURSE UI_SOURCES "UI/*.c")
+
 idf_component_register(
     SRCS
         "scr/ILI9341_screen.c"
@@ -11,16 +14,7 @@ idf_component_register(
         "Test/Display_Manager/TestDisplay_Manager.c"
         "Test/SMD_Manager/TestSMD_Manager.c"
         "Test/Temp_Ctrl/TestTemp_Ctrl.c"
-        "UI/screens/ui_Screen1.c"
-        "UI/screens/ui_Screen2.c"
-        "UI/ui.c"
-        "UI/components/ui_comp_hook.c"
-        "UI/ui_helpers.c"
-        "UI/images/ui_img_bakground_blue_png.c"
-        "UI/images/ui_img_icon_gold_png.c"
-        "UI/images/ui_img_left_arrow_png.c"
-        "UI/fonts/ui_font_Roboto2.c"
-        "UI/fonts/ui_font_Roboto1.c"
+        ${UI_SOURCES}
     INCLUDE_DIRS
         "includes"
         "scr"
