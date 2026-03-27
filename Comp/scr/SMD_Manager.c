@@ -64,7 +64,8 @@ typedef struct {
 
 Manager_SMD mainSolder = {
     .state = UNDDEFINED,
-    .SMDManager_UpdateTemperature_Timer = NULL
+    .SMDManager_UpdateTemperature_Timer = NULL,
+    .target_temperature = 25,
 };
 
 
@@ -352,8 +353,8 @@ void SMDManager_Task(void *pvParameters){
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_UPDATE_TEMP) {
                     mainSolder.temperature = TempSensing_GetTemperature();
-                    DisplayManager_SetTemperature(mainSolder.temperature);
-                    ESP_LOGI("Display_Manager_Test_Task", "Setting temperature to: %.2f °C",  mainSolder.temperature);
+                    DisplayManager_UpdateTemperature(mainSolder.temperature);
+                    ESP_LOGI("Display_Manager_Test_Task", "Readed Temperature: %.2f °C",  mainSolder.temperature);
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_STOP) {
                     
@@ -374,7 +375,7 @@ void SMDManager_Task(void *pvParameters){
 
                 mainSolder.temperature = TempSensing_GetTemperature();
                 
-                DisplayManager_SetTemperature(mainSolder.temperature);
+                DisplayManager_UpdateTemperature(mainSolder.temperature);
                 TempCtrl_UpdateTemperature(mainSolder.temperature);
                 ESP_LOGI("SMD_Manager_Task", "Setting temperature to: %.2f °C",  mainSolder.temperature);
                 vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 2000 mseconds
@@ -390,12 +391,14 @@ void SMDManager_Task(void *pvParameters){
 
              
                 if (signal & SMD_MANAGER_SIGNAL_KEY_MORE_TEMP) {
-                    mainSolder.target_temperature += 1;
+                    mainSolder.target_temperature += 10;
+                    DisplayManager_SetTemperature(mainSolder.target_temperature);
                     ESP_LOGI("SMD_Manager_Task", "Temperature increased to: %.2f °C", mainSolder.temperature);
 
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_KEY_LESS_TEMP) {
-                    mainSolder.target_temperature -= 1;
+                    mainSolder.target_temperature -= 10;
+                    DisplayManager_SetTemperature(mainSolder.target_temperature);
                     ESP_LOGI("SMD_Manager_Task", "Temperature decreased to: %.2f °C", mainSolder.temperature);
 
                 }
@@ -425,8 +428,8 @@ void SMDManager_Task(void *pvParameters){
 
                 else if (signal & SMD_MANAGER_SIGNAL_UPDATE_TEMP) {
                     mainSolder.temperature = TempSensing_GetTemperature();
-                    DisplayManager_SetTemperature(mainSolder.temperature);
-                    ESP_LOGI("Display_Manager_Test_Task", "Setting temperature to: %.2f °C",  mainSolder.temperature);
+                    DisplayManager_UpdateTemperature(mainSolder.temperature);
+                    ESP_LOGI("Display_Manager_Test_Task", "Readed Temperature: %.2f °C",  mainSolder.temperature);
                 }
 
                 else if (signal & SMD_MANAGER_SIGNAL_STOP) {
@@ -587,7 +590,7 @@ void SMDManager_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer){
     {
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_UPDATE_TEMP, eSetBits);
     }
-    ESP_LOGI("Timer_Callback", "SMDManager_UpdateTemperature_Timer_Callback executed");
+    //ESP_LOGI("Timer_Callback", "SMDManager_UpdateTemperature_Timer_Callback executed");
 
     //Manager_SMD_SignalSet(MANAGER_SMD_SIGNAL_UPDATE_TEMPERATURE);
 
@@ -597,38 +600,44 @@ void SMDManager_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer){
 void SMDManager_ScreenAction_Callback(DisplayManager_Button_t button)
 {
     // This callback can be used to handle screen actions if needed
-    ESP_LOGI("SMDManager_ScreenAction_Callback", "Screen action callback executed");
+    //ESP_LOGI("SMDManager_ScreenAction_Callback", "Screen action callback executed");
 
      switch (button)
     {
     case DISPLAY_MANAGER_BUTTON_Solder:
         /* code */
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_SOLDER, eSetBits);
+        ESP_LOGD("SMDManager_ScreenAction_Callback", "Button Solder clicked");
         break;
     
     case DISPLAY_MANAGER_BUTTON_SetTemp:
         /* code */
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_SET_TEMP, eSetBits);
+        ESP_LOGD("SMDManager_ScreenAction_Callback", "Button SetTemp clicked");
         break;
 
     case DISPLAY_MANAGER_BUTTON_Settings:
         /* code */
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_SETTINGS, eSetBits);
+        ESP_LOGD("SMDManager_ScreenAction_Callback", "Button Settings clicked");
         break;
 
     case DISPLAY_MANAGER_BUTTON_Heat:
         /* code */
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_HEAT, eSetBits);
+        ESP_LOGD("SMDManager_ScreenAction_Callback", "Button Heat clicked");
         break;
     
     case DISPLAY_MANAGER_BUTTON_MoreTemp:
         /* code */
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_KEY_MORE_TEMP, eSetBits);
+        ESP_LOGD("SMDManager_ScreenAction_Callback", "Button MoreTemp clicked");
         break;
 
     case DISPLAY_MANAGER_BUTTON_LessTemp:
         /* code */
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_KEY_LESS_TEMP, eSetBits);
+        ESP_LOGD("SMDManager_ScreenAction_Callback", "Button LessTemp clicked");
         break;
 
     

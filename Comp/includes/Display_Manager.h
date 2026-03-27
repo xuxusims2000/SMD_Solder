@@ -118,6 +118,7 @@ esp_err_t DisplayManager_Release(void);
 void DisplayManager_SetState(DisplayManagerState state);
 void ScreenButtonClicked(DisplayManager_Button_t button);
 esp_err_t DisplayManager_SetTemperature(float temperature);
+esp_err_t DisplayManager_UpdateTemperature(float temperature);
 
 lv_obj_t* DisplayManager_GetScreen(void);
 

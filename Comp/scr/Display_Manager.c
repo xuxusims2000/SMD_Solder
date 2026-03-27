@@ -13,6 +13,9 @@ static esp_err_t DisplayManager_Requesting(void);
 static esp_err_t DisplayManager_Releasing(void);
 static uint32_t DisplayManagerSignalWait(uint32_t signal, uint32_t timeout);
 
+static void DisplayManager_UpdateTemperature_Callback(void* param);
+static void DisplayManager_SetTemperature_Callback(void* param);
+
 /*============================== Private Global Variables ==============================*/
 
 static _lock_t lvgl_api_lock2;
@@ -428,8 +431,31 @@ void DisplayManager_SetState(DisplayManagerState state)
     display_manager.state = state;
 }
 
+
+
+
+esp_err_t DisplayManager_UpdateTemperature(float temperature)
+{
+    esp_err_t result = ESP_FAIL;
+
+    display_manager.temperature = temperature;
+
+    // Allocate float copy for async callback
+    float* temp_copy = malloc(sizeof(float));
+    if (temp_copy != NULL) {
+        *temp_copy = temperature;
+        // Queue to update to run safely in LVGL context it schedules callback in LVGL
+        lv_async_call(DisplayManager_UpdateTemperature_Callback, temp_copy);
+        result = ESP_OK;
+    } else {
+        result = ESP_FAIL;
+    }
+
+    return result;
+}
+
 // Callback for thread-safe LVGL temperature update
-static void DisplayManager_SetTemperature_Callback(void* param)
+static void DisplayManager_UpdateTemperature_Callback(void* param)
 {
     float* temperature = (float*)param;
     display_manager.current_screen = lv_scr_act(); // Get the active screen just once
@@ -458,17 +484,16 @@ static void DisplayManager_SetTemperature_Callback(void* param)
         free(temperature);
 }
 
-
-esp_err_t DisplayManager_SetTemperature(float temperature)
+esp_err_t DisplayManager_SetTemperature(float targetTemperature)
 {
     esp_err_t result = ESP_FAIL;
 
-    display_manager.temperature = temperature;
+    display_manager.temperature = targetTemperature;
 
     // Allocate float copy for async callback
     float* temp_copy = malloc(sizeof(float));
     if (temp_copy != NULL) {
-        *temp_copy = temperature;
+        *temp_copy = targetTemperature;
         // Queue to update to run safely in LVGL context it schedules callback in LVGL
         lv_async_call(DisplayManager_SetTemperature_Callback, temp_copy);
         result = ESP_OK;
@@ -477,6 +502,19 @@ esp_err_t DisplayManager_SetTemperature(float temperature)
     }
 
     return result;
+}
+
+static void DisplayManager_SetTemperature_Callback(void* param)
+{
+    float* temperature = (float*)param;
+    display_manager.current_screen = lv_scr_act(); // Get the active screen just once
+
+    if (temperature != NULL) {
+        static char temp_buffer[16];
+        snprintf(temp_buffer, sizeof(temp_buffer), "%.2f °C", *temperature);
+        lv_label_set_text(uic_ValTemp2, temp_buffer);
+    }
+        free(temperature);
 }
 
 void ScreenButtonClicked(DisplayManager_Button_t button)
@@ -495,22 +533,42 @@ void ScreenButtonClicked(DisplayManager_Button_t button)
     
     case DISPLAY_MANAGER_BUTTON_SetTemp:
         /* code */
+        if (display_manager.config.callbacks.ScreenActionCallback != NULL)
+        {
+            display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_SetTemp);
+        }
         break;
 
     case DISPLAY_MANAGER_BUTTON_Settings:
         /* code */
+        if (display_manager.config.callbacks.ScreenActionCallback != NULL)
+        {
+            display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_Settings);
+        }
         break;
 
     case DISPLAY_MANAGER_BUTTON_Heat:
         /* code */
+        if (display_manager.config.callbacks.ScreenActionCallback != NULL)
+        {
+            display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_Heat);
+        }
         break;
     
     case DISPLAY_MANAGER_BUTTON_MoreTemp:
         /* code */
+        if (display_manager.config.callbacks.ScreenActionCallback != NULL)
+        {
+            display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_MoreTemp);
+        }
         break;
 
     case DISPLAY_MANAGER_BUTTON_LessTemp:
         /* code */
+        if (display_manager.config.callbacks.ScreenActionCallback != NULL)
+        {
+            display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_LessTemp);
+        }
         break;
 
     
