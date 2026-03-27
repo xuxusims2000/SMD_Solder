@@ -13,7 +13,7 @@
 // -------------------- Test functions ------------------------
 
 /*Request , ... , Rlease*/
-void Test_Temp_Ctrl_1(void);
+void Test_TempCtrl_1(void);
 
 // PID Tuning Test -> Sets the temperature to 50 and plots the results 
 void Test_Temp_Ctrl_PID_TUNE(void);

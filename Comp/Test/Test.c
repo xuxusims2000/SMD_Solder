@@ -34,7 +34,7 @@ void test_function() {
     //Test_display_manager_2();
 
     /*----------Module Temperature Control----------------------*/
-    //Test_Temp_Ctrl_1();
+    //Test_TempCtrl_1();
     //Test_Temp_Ctrl_PID_TUNE();
 
 

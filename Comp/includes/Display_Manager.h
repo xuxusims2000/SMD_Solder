@@ -9,6 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_timer.h"
+#include <assert.h>
 
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_vendor.h"
@@ -71,7 +72,6 @@ typedef enum {
     DISPLAY_MANAGER_POWER_OFF, 
     DISPLAY_MANAGER_REQUESTING,
     DISPLAY_MANAGER_REQUESTED,
-    //DISPLAY_MANAGER_START,
     DISPLAY_MANAGER_IDLE,
     DISPLAY_MANAGER_RELEASING
 } DisplayManagerState;
@@ -85,8 +85,18 @@ typedef enum DisplayManager_Result_e {
     DISPLAY_MANAGER_RESULT_OPERATION_OK
 } DisplayManager_Result_t;
 
+typedef enum DisplayManager_Button_e {
+    DISPLAY_MANAGER_BUTTON_Solder,
+    DISPLAY_MANAGER_BUTTON_SetTemp,
+    DISPLAY_MANAGER_BUTTON_Settings,
+    DISPLAY_MANAGER_BUTTON_Heat,
+    DISPLAY_MANAGER_BUTTON_MoreTemp,
+    DISPLAY_MANAGER_BUTTON_LessTemp,
+} DisplayManager_Button_t;
+
 typedef struct DisplayManager_Callbacks_e {
     void (*OperationCompleteCallback)(DisplayManager_Result_t result);
+    void (*ScreenActionCallback)(DisplayManager_Button_t button);
 
 } DisplayManager_Callbacks_t;
 
@@ -106,7 +116,7 @@ void DisplayManager_Stop(void);
 esp_err_t DisplayManager_Release(void);
 
 void DisplayManager_SetState(DisplayManagerState state);
-
+void ScreenButtonClicked(DisplayManager_Button_t button);
 esp_err_t DisplayManager_SetTemperature(float temperature);
 
 lv_obj_t* DisplayManager_GetScreen(void);

@@ -20,7 +20,6 @@ typedef enum {
     TEMP_CTRL_RQUESTING,
     TEMP_CTRL_REQUESTED,
     TEMP_CTRL_START,
-    TEMP_CTRL_SET_TEMP,
     TEMP_CTRL_RELEASING
 } TempCtrlState;
 
@@ -46,9 +45,9 @@ typedef struct TempCtrl_Configuration_e {
 
 // Declare functions
 
-void Temp_Ctrl_Task(void *pvParameters);
+void TempCtrl_Task(void *pvParameters);
 
-void Temp_Ctrl_Init(void);
+void TempCtrl_Init(void);
 esp_err_t Temp_Ctrl_Request(TempCtrl_Configuration_t* config);
 esp_err_t Temp_Ctrl_Start(void);
 void Temp_Ctrl_Stop(void);
@@ -72,7 +71,7 @@ esp_err_t TempCtrl_SetTemperature(uint32_t temp);
 #define Tmax 350 //Tempere max that hotplate can get
 
 
-uint64_t Compute_pid(double setpoint, double current_temp);
+uint64_t Temp_Compute_pid(double setpoint, double current_temp);
 uint16_t Temperature2PWM(uint16_t temperature);
 
 void Test_PID_control_(void);

@@ -26,6 +26,7 @@ typedef struct {
     SemaphoreHandle_t                xSemaphore;
 
     lv_display_t*                    lvgl_display;
+    lv_obj_t*                        current_screen;
     TaskHandle_t                     lvgl_task_handle;
     bool                             lvgl_initialized;
 
@@ -38,7 +39,6 @@ typedef struct {
     void*                            lvgl_buf1;
     void*                            lvgl_buf2;
 
-    lv_obj_t*                        current_screen;
 
     float                           temperature;
 } DisplayManager_t;
@@ -93,7 +93,10 @@ esp_err_t DisplayManager_Request(DisplayManager_Configuration_t* config)
     }
 
     ESP_LOGI("DisplayManager_Request", "Semaphore taken, requesting display");
-
+    assert(config != NULL);
+    assert(config->callbacks.OperationCompleteCallback != NULL);
+    assert(config->callbacks.ScreenActionCallback != NULL);
+    
     memcpy(&display_manager.config, config, sizeof(DisplayManager_Configuration_t));
     display_manager.state = DISPLAY_MANAGER_REQUESTING;
 
@@ -195,22 +198,22 @@ void Display_Manager_Task(void *pvParameters)
 
         case DISPLAY_MANAGER_IDLE:
 
-            lv_obj_t * current_screen = lv_scr_act(); // Get the active screen just once
+            display_manager.current_screen = lv_scr_act(); // Get the active screen just once
 
-            if (current_screen == NULL) {
+            if (display_manager.current_screen == NULL) {
                 ESP_LOGW("Display_Manager_Task", "STATE: Screen is NULL");
-            } else if (current_screen == ui_SCLolos) {
+            } else if (display_manager.current_screen == ui_SCLolos) {
                 ESP_LOGI("Display_Manager_Task", "STATE: Splash (Lolos)");
-            } else if (current_screen == ui_SCHome) {
+            } else if (display_manager.current_screen == ui_SCHome) {
                 ESP_LOGI("Display_Manager_Task", "STATE: Home");
-            } else if (current_screen == ui_SCSolder) {
+            } else if (display_manager.current_screen == ui_SCSolder) {
                 ESP_LOGI("Display_Manager_Task", "STATE: Solder");
-            } else if (current_screen == ui_TFunction) {
+            } else if (display_manager.current_screen == ui_TFunction) {
                 ESP_LOGI("Display_Manager_Task", "STATE: Function");
-            } else if (current_screen == ui_SCSetTemp) {
+            } else if (display_manager.current_screen == ui_SCSetTemp) {
                 ESP_LOGI("Display_Manager_Task", "STATE: SetTemp");
             } else {
-                ESP_LOGW("Display_Manager_Task", "STATE: Unknown Screen active: %p", (void*)current_screen);
+                ESP_LOGW("Display_Manager_Task", "STATE: Unknown Screen active: %p", (void*)display_manager.current_screen);
             }
              
             /* La idea es fer que en fucnio de la pantalla que estigui 
@@ -429,13 +432,32 @@ void DisplayManager_SetState(DisplayManagerState state)
 static void DisplayManager_SetTemperature_Callback(void* param)
 {
     float* temperature = (float*)param;
+    display_manager.current_screen = lv_scr_act(); // Get the active screen just once
+
     if (temperature != NULL) {
         static char temp_buffer[16];
         snprintf(temp_buffer, sizeof(temp_buffer), "%.2f °C", *temperature);
-        lv_label_set_text(ui_ValTemp1, temp_buffer);
-        free(temperature);
+        
+        if(display_manager.current_screen == NULL) {
+            ESP_LOGW("DisplayManager_SetTemperature_Callback", "Current screen is NULL");
+        } 
+        else if (display_manager.current_screen == ui_SCHome) {
+            //ESP_LOGI("DisplayManager_SetTemperature_Callback", "Current screen: Home");
+            lv_label_set_text(ui_ValTemp1, temp_buffer);
+
+        } 
+        else if (display_manager.current_screen == ui_SCSetTemp) {
+            //ESP_LOGI("DisplayManager_SetTemperature_Callback", "Current screen: SetTemp");
+            lv_label_set_text(uic_ValActualTemp, temp_buffer);
+        } 
+        else {
+            ESP_LOGI("DisplayManager_SetTemperature_Callback", "Current screen: unknown %p", (void*)display_manager.current_screen);
+        }
     }
+        
+        free(temperature);
 }
+
 
 esp_err_t DisplayManager_SetTemperature(float temperature)
 {
@@ -447,7 +469,7 @@ esp_err_t DisplayManager_SetTemperature(float temperature)
     float* temp_copy = malloc(sizeof(float));
     if (temp_copy != NULL) {
         *temp_copy = temperature;
-        // Queue the update to run safely in LVGL context
+        // Queue to update to run safely in LVGL context it schedules callback in LVGL
         lv_async_call(DisplayManager_SetTemperature_Callback, temp_copy);
         result = ESP_OK;
     } else {
@@ -455,6 +477,46 @@ esp_err_t DisplayManager_SetTemperature(float temperature)
     }
 
     return result;
+}
+
+void ScreenButtonClicked(DisplayManager_Button_t button)
+{
+    ESP_LOGI("ScreenButtonClicked", "Button clicked: %d", button);
+
+    switch (button)
+    {
+    case DISPLAY_MANAGER_BUTTON_Solder:
+        /* code */
+        if (display_manager.config.callbacks.ScreenActionCallback != NULL)
+        {
+            display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_Solder);
+        }
+        break;
+    
+    case DISPLAY_MANAGER_BUTTON_SetTemp:
+        /* code */
+        break;
+
+    case DISPLAY_MANAGER_BUTTON_Settings:
+        /* code */
+        break;
+
+    case DISPLAY_MANAGER_BUTTON_Heat:
+        /* code */
+        break;
+    
+    case DISPLAY_MANAGER_BUTTON_MoreTemp:
+        /* code */
+        break;
+
+    case DISPLAY_MANAGER_BUTTON_LessTemp:
+        /* code */
+        break;
+
+    
+    default:
+        break;
+    }
 }
 
 

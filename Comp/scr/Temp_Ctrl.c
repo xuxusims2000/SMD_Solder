@@ -8,6 +8,7 @@
 #define TEMP_CTRL_SIGNAL_STOP        (1 << 3)  // Signal to release temperature control
 #define TEMP_CTRL_SIGNAL_SET_TEMP    (1 << 4)  // Signal to set temperature
 
+
 esp_err_t tempCtrl_Requesting(void);
 uint32_t tempCtrlSignalWait(uint32_t signal, uint32_t timeout);
 esp_err_t tempCtrl_Releasing(void);
@@ -55,7 +56,7 @@ static TempCtrl_t temp_ctrl = {
     // Initialize other members as needed
 };
 
-void Temp_Ctrl_Init(void){
+void TempCtrl_Init(void){
 
     if (   (temp_ctrl.state == TEMP_CTRL_UNDEFINED) 
         && (temp_ctrl.taskHandle == NULL) )
@@ -80,7 +81,7 @@ void Temp_Ctrl_Init(void){
         temp_ctrl.state = TEMP_CTRL_POWER_OFF;
        
         //Create Task
-        xTaskCreate(Temp_Ctrl_Task, 
+        xTaskCreate(TempCtrl_Task, 
                     "Temperature_control_Task", 
                     2048, 
                     NULL, 
@@ -168,7 +169,7 @@ void Temp_Ctrl_Release(void){
     }
 }  
 
- void Temp_Ctrl_Task(void *pvParameters){
+ void TempCtrl_Task(void *pvParameters){
 
      esp_err_t result = ESP_FAIL;
      uint32_t signal = 0;
@@ -239,9 +240,20 @@ void Temp_Ctrl_Release(void){
             //set_pwm_duty(200); //Example set duty cycle to 50%
 
 
-            signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP | TEMP_CTRL_SET_TEMP,  portMAX_DELAY);
+            signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP | TEMP_CTRL_SIGNAL_SET_TEMP ,  portMAX_DELAY);
 
-            if (signal & TEMP_CTRL_SIGNAL_STOP)
+        
+           if (signal & TEMP_CTRL_SIGNAL_SET_TEMP)
+            {
+                printf(">Current Temperature: %lu°C\n", temp_ctrl.temp);
+                printf(">Target Temperature: %lu°C\n", temp_ctrl.target_temperature);
+                TempCtrl_CalculateTemp();          
+                
+                ESP_LOGI("Temp_Ctrl_Task", "Temperature Set to: %lu", temp_ctrl.target_temperature);
+           
+            }
+            
+               else if (signal & TEMP_CTRL_SIGNAL_STOP)
             {
                 temp_ctrl.state = TEMP_CTRL_REQUESTED;
                 ESP_LOGI("Temp_Ctrl_Task", "STATE: REQUESTED");
@@ -250,42 +262,9 @@ void Temp_Ctrl_Release(void){
                     temp_ctrl.config.callbacks.OperationCompleteCallback(TEMP_CTRL_RESULT_STOP);
                 }
             }
-
-            else if (signal & TEMP_CTRL_SET_TEMP)
-            {
-                temp_ctrl.state = TEMP_CTRL_SET_TEMP;
-            }
-            
             break;
 
-        case TEMP_CTRL_SET_TEMP:
-            ESP_LOGI("Temp_Ctrl_Task", "STATE: SET TEMPERATURE");
 
-            
-            signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP | TEMP_CTRL_SET_TEMP | TEMP_CTRL_SIGNAL_START,  portMAX_DELAY);
-
-            if ( signal & TEMP_CTRL_SET_TEMP )
-            {  
-                TempCtrl_CalculateTemp();
-         
-            }
-            
-            else if ( signal & TEMP_CTRL_SIGNAL_START)
-            {
-
-            }
-
-            else if (signal & TEMP_CTRL_SIGNAL_STOP)
-            {
-                temp_ctrl.state = TEMP_CTRL_REQUESTED;
-                ESP_LOGI("Temp_Ctrl_Task", "STATE: REQUESTED");
-                if (temp_ctrl.config.callbacks.OperationCompleteCallback != NULL)
-                {
-                    temp_ctrl.config.callbacks.OperationCompleteCallback(TEMP_CTRL_RESULT_STOP);
-                }
-            }
-
-            break;
 
         case TEMP_CTRL_RELEASING:
             ESP_LOGI("Temp_Ctrl_Task", "STATE: RELEASING");
@@ -369,7 +348,7 @@ esp_err_t config_pwm(void){
 
 
 /*------------------PID Controller Function--------------------------*/ 
-uint64_t Compute_pid(double setpoint, double current_temp) {
+uint64_t Temp_Compute_pid(double setpoint, double current_temp) {
     // Compute error
     double error = setpoint - current_temp;
 
@@ -428,7 +407,9 @@ esp_err_t TempCtrl_SetTemperature(uint32_t temp) //fpaso de flaot a uint32
     //may be i havt to check the conversion from float to uint32
     
     temp_ctrl.target_temperature = temp;
-    xTaskNotify(temp_ctrl.taskHandle, TEMP_CTRL_SET_TEMP, eSetBits);
+
+
+    xTaskNotify(temp_ctrl.taskHandle, TEMP_CTRL_SIGNAL_SET_TEMP, eSetBits);
     return ESP_OK;
 }
 
@@ -436,10 +417,10 @@ void TempCtrl_CalculateTemp(void)
 {
     uint32_t aux_duty;
     
-    temp_ctrl.pid_output = Compute_pid(temp_ctrl.target_temperature, temp_ctrl.temp);
+    temp_ctrl.pid_output = Temp_Compute_pid(temp_ctrl.target_temperature, temp_ctrl.temp);
     ESP_LOGI("set_pwm_duty", "PWM duty set to %lu", temp_ctrl.pid_output);
 
-    aux_duty = (temp_ctrl.pid_output * 1023) / Tmax;
+    aux_duty = Temperature2PWM(temp_ctrl.pid_output);
     set_pwm_duty(aux_duty);
 
     // For now, we'll just log that this function was called.

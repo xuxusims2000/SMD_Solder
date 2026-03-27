@@ -10,9 +10,6 @@
 extern "C" {
 #endif
 
-void BSolder_Cliked(lv_event_t * e);
-void BSetTempCliked(lv_event_t * e);
-void BSettings_Cliked(lv_event_t * e);
 void InecreaseTemp(lv_event_t * e);
 void Heat(lv_event_t * e);
 void DecreaseTemp(lv_event_t * e);

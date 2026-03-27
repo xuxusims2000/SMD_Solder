@@ -32,16 +32,16 @@ void TestTemp_Ctrl_OperationCompleteCallback(TempCtrl_Result_t result);
 
 // -------------------- Test functions ------------------------
 
-void Test_Temp_Ctrl_1(void){
+void Test_TempCtrl_1(void){
 
     ESP_LOGI("Test_Temp_Ctrl_1", "Starting Temperature Control Test 1");
 
-    Temp_Ctrl_Init();
-    esp_err_t ret = init_spi_bus();
-    ;
-    ret = add_max6675_device(&testTempCtrl.max6675);
+    TempCtrl_Init();
+    //esp_err_t ret = init_spi_bus();
+    
+    //ret = add_max6675_device(&testTempCtrl.max6675);
 
-    uint16_t new_temperature = 0;
+    //uint16_t new_temperature = 0;
 
     /* Create and start 'test task thread'*/
     xTaskCreate(TestTemp_Ctrl_Task_1, "Test_Temp_Ctrl_Task_1", 2048, NULL, 1, &testTempCtrl.taskHandle);
@@ -52,7 +52,7 @@ void Test_Temp_Ctrl_PID_TUNE(void){
 
     ESP_LOGI("Test_Temp_Ctrl_PID_TUNE", "Starting Temperature Control PID Tuning Test");
 
-    Temp_Ctrl_Init();
+    TempCtrl_Init();
 
     /* Create and start 'test task thread'*/
     xTaskCreate(TestTemp_Ctrl_Task_PID_TUNE, "Test_Temp_Ctrl_Task_PID_TUNE", 2048, NULL, 1, &testTempCtrl.taskHandle);
@@ -85,6 +85,16 @@ void TestTemp_Ctrl_Task_1(void *pvParameters) // Test task function prototype
 
        while(1)
           {
+
+            for ( uint8_t j = 0; j < 5; j++) {
+                ESP_LOGI("TestTemp_Ctrl_Task_1", "Temperature Control Running... %d", j);
+                
+                TempCtrl_UpdateTemperature(25);
+
+                TempCtrl_SetTemperature(40);
+
+                vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
+            }
 
             vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 mseconds
 
