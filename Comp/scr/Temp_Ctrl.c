@@ -38,12 +38,10 @@ typedef struct {
     uint32_t                        temp;
     uint32_t                        pid_output;
 
+    bool                            heat_up_process_active;
+
 } TempCtrl_t;
 
-// PID Variables
-//double last_error = 0.0;
-//double integral = 0.0;
-//const double dt = 0.5; // Time step (in seconds), adjust based on your loop timing
 
 
 /* Private variables --------------------------------------------------*/
@@ -53,6 +51,8 @@ static TempCtrl_t temp_ctrl = {
     .signals = 0,
     .taskHandle= NULL,
     .TempCtrl_xSemaphoreHandle = NULL,
+    .dt = 0.1, // Example time step for PID calculations (100 ms)
+    .heat_up_process_active = false,
     // Initialize other members as needed
 };
 
@@ -245,9 +245,20 @@ void Temp_Ctrl_Release(void){
         
            if (signal & TEMP_CTRL_SIGNAL_SET_TEMP)
             {
-                printf(">Current Temperature: %lu°C\n", temp_ctrl.temp);
-                printf(">Target Temperature: %lu°C\n", temp_ctrl.target_temperature);
-                TempCtrl_CalculateTemp();          
+                 
+
+                while (temp_ctrl.heat_up_process_active == true)
+                {
+                    printf(">Current Temperature: %lu°C\n", temp_ctrl.temp);
+                    printf(">Target Temperature: %lu°C\n", temp_ctrl.target_temperature);
+                    TempCtrl_CalculateTemp();
+                    //set_pwm_duty(512); //Example set duty cycle to 50% 
+                    vTaskDelay(pdMS_TO_TICKS(100));  // Delay for 5000 ms (5 seconds)
+                    ESP_LOGI("Temp_Ctrl_Task", "Stop temperature %d", temp_ctrl.heat_up_process_active);
+
+
+                }
+                 
                 
                 ESP_LOGI("Temp_Ctrl_Task", "Temperature Set to: %lu", temp_ctrl.target_temperature);
            
@@ -323,7 +334,7 @@ esp_err_t config_pwm(void){
            .channel        = LEDC_CHANNEL_0,     // Channel 0
            .intr_type      = LEDC_INTR_DISABLE,        // No interrupt
            .timer_sel      = LEDC_TIMER_0,       // Use Timer 0
-           .duty           = (512),                  // Initial duty cycle (0%)
+           .duty           = (0),                  // Initial duty cycle (0%)
            .hpoint         = 0                   // Set hpoint to 0
        };
        ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
@@ -350,16 +361,16 @@ esp_err_t config_pwm(void){
 /*------------------PID Controller Function--------------------------*/ 
 uint64_t Temp_Compute_pid(double setpoint, double current_temp) {
     // Compute error
-    double error = setpoint - current_temp;
+    uint64_t error = setpoint - current_temp;
 
     // Integral term (accumulated error)
     temp_ctrl.integral += error * temp_ctrl.dt;
 
     // Derivative term (rate of change of error)
-    double derivative = (error - temp_ctrl.last_error) / temp_ctrl.dt;
+    uint64_t derivative = (error - temp_ctrl.last_error) / temp_ctrl.dt;
 
     // Compute PID output
-    double output = (Kp * error) + (Ki * temp_ctrl.integral) + (Kd * derivative);
+    uint64_t output = (Kp * error) + (Ki * temp_ctrl.integral) + (Kd * derivative);
 
     // Save current error for next iteration
     temp_ctrl.last_error = error;
@@ -407,10 +418,19 @@ esp_err_t TempCtrl_SetTemperature(uint32_t temp) //fpaso de flaot a uint32
     //may be i havt to check the conversion from float to uint32
     
     temp_ctrl.target_temperature = temp;
-
-
+    temp_ctrl.heat_up_process_active = true;
+    //set_pwm_duty(512); //Example set duty cycle to 50%
     xTaskNotify(temp_ctrl.taskHandle, TEMP_CTRL_SIGNAL_SET_TEMP, eSetBits);
     return ESP_OK;
+}
+
+void TempCtrl_StopTemperatureControl(void)
+{
+    temp_ctrl.heat_up_process_active = false;
+    set_pwm_duty(0); //Example set duty cycle to 50% 
+    ESP_LOGI("Temp_Ctrl_Task", "Stop temperature %d", temp_ctrl.heat_up_process_active);
+
+
 }
 
 void TempCtrl_CalculateTemp(void)
@@ -418,13 +438,12 @@ void TempCtrl_CalculateTemp(void)
     uint32_t aux_duty;
     
     temp_ctrl.pid_output = Temp_Compute_pid(temp_ctrl.target_temperature, temp_ctrl.temp);
+    //if (temp_ctrl.pid_output < 0) temp_ctrl.pid_output = 0;
+    //if (temp_ctrl.pid_output > 1023) temp_ctrl.pid_output = 1023;
     ESP_LOGI("set_pwm_duty", "PWM duty set to %lu", temp_ctrl.pid_output);
 
     aux_duty = Temperature2PWM(temp_ctrl.pid_output);
     set_pwm_duty(aux_duty);
-
-    // For now, we'll just log that this function was called.
-    //ESP_LOGI("TempCtrl_CalculateTemp", "Calculating current temperature...");
 }
 
    
@@ -470,8 +489,7 @@ esp_err_t tempCtrl_Releasing(void)
 
  void TempCtrl_SetState(TempCtrlState state)
 {
-    //TODO -> validate state transition
-    
+    //TODO 
     temp_ctrl.state = state;
 }
 

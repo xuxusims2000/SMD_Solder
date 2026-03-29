@@ -92,6 +92,7 @@ typedef enum DisplayManager_Button_e {
     DISPLAY_MANAGER_BUTTON_Heat,
     DISPLAY_MANAGER_BUTTON_MoreTemp,
     DISPLAY_MANAGER_BUTTON_LessTemp,
+    DISPLAY_MANAGER_BUTTON_HOME,
 } DisplayManager_Button_t;
 
 typedef struct DisplayManager_Callbacks_e {

@@ -519,8 +519,7 @@ static void DisplayManager_SetTemperature_Callback(void* param)
 
 void ScreenButtonClicked(DisplayManager_Button_t button)
 {
-    ESP_LOGI("ScreenButtonClicked", "Button clicked: %d", button);
-
+    
     switch (button)
     {
     case DISPLAY_MANAGER_BUTTON_Solder:
@@ -528,6 +527,7 @@ void ScreenButtonClicked(DisplayManager_Button_t button)
         if (display_manager.config.callbacks.ScreenActionCallback != NULL)
         {
             display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_Solder);
+            ESP_LOGI("ScreenButtonClicked", "Button clicked: Solder");
         }
         break;
     
@@ -536,6 +536,7 @@ void ScreenButtonClicked(DisplayManager_Button_t button)
         if (display_manager.config.callbacks.ScreenActionCallback != NULL)
         {
             display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_SetTemp);
+            ESP_LOGI("ScreenButtonClicked", "Button clicked: SetTemp");
         }
         break;
 
@@ -544,6 +545,7 @@ void ScreenButtonClicked(DisplayManager_Button_t button)
         if (display_manager.config.callbacks.ScreenActionCallback != NULL)
         {
             display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_Settings);
+            ESP_LOGI("ScreenButtonClicked", "Button clicked: Settings");
         }
         break;
 
@@ -552,6 +554,8 @@ void ScreenButtonClicked(DisplayManager_Button_t button)
         if (display_manager.config.callbacks.ScreenActionCallback != NULL)
         {
             display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_Heat);
+            ESP_LOGI("ScreenButtonClicked", "Button clicked: Heat");
+
         }
         break;
     
@@ -560,6 +564,8 @@ void ScreenButtonClicked(DisplayManager_Button_t button)
         if (display_manager.config.callbacks.ScreenActionCallback != NULL)
         {
             display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_MoreTemp);
+            ESP_LOGI("ScreenButtonClicked", "Button clicked: MoreTemp");
+
         }
         break;
 
@@ -568,10 +574,19 @@ void ScreenButtonClicked(DisplayManager_Button_t button)
         if (display_manager.config.callbacks.ScreenActionCallback != NULL)
         {
             display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_LessTemp);
+            ESP_LOGI("ScreenButtonClicked", "Button clicked: LessTemp");
         }
         break;
 
-    
+    case DISPLAY_MANAGER_BUTTON_HOME:
+        /* code */
+        if (display_manager.config.callbacks.ScreenActionCallback != NULL)
+        {
+            display_manager.config.callbacks.ScreenActionCallback(DISPLAY_MANAGER_BUTTON_HOME);
+            ESP_LOGI("ScreenButtonClicked", "Button clicked: HOME");
+        }
+        break;
+
     default:
         break;
     }

@@ -36,6 +36,7 @@ typedef enum {
     IDLE,
     SET_TEMP,
     SOLDERING,
+    SETTINGS,
     RELAXED,  
     RELEASING
 } SolderingManagerState;

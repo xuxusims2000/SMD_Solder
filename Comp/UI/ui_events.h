@@ -16,6 +16,7 @@ void BSettings_Cliked(lv_event_t * e);
 void InecreaseTemp(lv_event_t * e);
 void Heat(lv_event_t * e);
 void DecreaseTemp(lv_event_t * e);
+void BHome_Cliked(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

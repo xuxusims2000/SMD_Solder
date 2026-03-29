@@ -40,3 +40,9 @@ void DecreaseTemp(lv_event_t * e)
 	// Your code here
 	ScreenButtonClicked(DISPLAY_MANAGER_BUTTON_LessTemp);
 }
+
+void BHome_Cliked(lv_event_t * e)
+{
+	// Your code here
+	ScreenButtonClicked(DISPLAY_MANAGER_BUTTON_HOME);
+}

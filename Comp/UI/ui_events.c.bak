@@ -5,17 +5,38 @@
 
 #include "ui.h"
 
+void BSolder_Cliked(lv_event_t * e)
+{
+	// Your code here
+	ScreenButtonClicked(DISPLAY_MANAGER_BUTTON_Solder);
+}
+
+void BSetTempCliked(lv_event_t * e)
+{
+	// Your code here
+	ScreenButtonClicked(DISPLAY_MANAGER_BUTTON_SetTemp);
+}
+
+void BSettings_Cliked(lv_event_t * e)
+{
+	// Your code here
+	ScreenButtonClicked(DISPLAY_MANAGER_BUTTON_Settings);
+}
+
 void InecreaseTemp(lv_event_t * e)
 {
 	// Your code here
+	ScreenButtonClicked(DISPLAY_MANAGER_BUTTON_MoreTemp);
 }
 
 void Heat(lv_event_t * e)
 {
 	// Your code here
+	ScreenButtonClicked(DISPLAY_MANAGER_BUTTON_Heat);
 }
 
 void DecreaseTemp(lv_event_t * e)
 {
 	// Your code here
+	ScreenButtonClicked(DISPLAY_MANAGER_BUTTON_LessTemp);
 }

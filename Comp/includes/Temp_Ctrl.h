@@ -59,12 +59,13 @@ esp_err_t config_pwm(void);
 esp_err_t set_pwm_duty(uint32_t duty);
 esp_err_t TempCtrl_UpdateTemperature(uint32_t temperature);
 esp_err_t TempCtrl_SetTemperature(uint32_t temp);
+void TempCtrl_StopTemperatureControl(void);
 
 
 // PID Constants (Tune these values)
 #define Kp 2.0      // Proportional gain
-#define Ki 0.5      // Integral gain
-#define Kd 1.0      // Derivative gain
+#define Ki 0 //0.5      // Integral gain
+#define Kd 0 //1.0      // Derivative gain
 
 #define FREQUENCY_PWM (10) //Frequency of PWM in Hz
 
