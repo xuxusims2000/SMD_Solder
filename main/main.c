@@ -1,6 +1,8 @@
 
 #include "main.h"
 #include "driver/ledc.h"
+#include "Debug.h"
+
 typedef enum MainApp_State_e{
     MAINAPP_POWER_OFF,
     MAINAPP_INITIALIZE_AND_START,
@@ -32,6 +34,13 @@ static void MainApp_SMD_Manager_OperationCompleteCallback(SMDManager_Result_t re
 
 void app_main(void)
 {
+  
+  esp_err_t debug_err = Debug_Init(UART_NUM_2, 115200, 17, 16);  
+  if (debug_err == ESP_OK) {
+    DBG_INFO("Debug Module Initialized");
+  } else {
+    ESP_LOGE("MAIN", "Failed to initialize Debug module: %d", debug_err);
+  }
 
   #ifdef TEST
   ESP_LOGI("TEST", "TEST MODE"); 

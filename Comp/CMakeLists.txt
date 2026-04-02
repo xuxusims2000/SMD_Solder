@@ -9,6 +9,7 @@ idf_component_register(
         "scr/Screen_design.c"
         "scr/Display_Manager.c"
         "scr/SMD_Manager.c"
+        "scr/Debug.c"
         "Test/Test.c"
         "Test/Temp_Sensing/TestTemp_Sensing.c"
         "Test/Display_Manager/TestDisplay_Manager.c"
