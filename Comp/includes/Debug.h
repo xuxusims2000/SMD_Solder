@@ -40,7 +40,7 @@ void Debug_LogDebug(const char *msg);
 void Debug_Teleplot(const char *var_name, float value);
 
 /* Macros para facilidad de uso */
-#define DBG(...)           Debug_Printf(__VA_ARGS__)
+#define DBG(fmt, ...)      Debug_Printf(fmt "\r\n", ##__VA_ARGS__)
 #define DBG_ERROR(msg)     Debug_LogError(msg)
 #define DBG_INFO(msg)      Debug_LogInfo(msg)
 #define DBG_WARNING(msg)   Debug_LogWarning(msg)

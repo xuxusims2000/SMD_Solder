@@ -6,8 +6,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
-#define DEBUG_UART_BUF_SIZE 1024
-#define DEBUG_BUFFER_SIZE   512
+#define DEBUG_UART_BUF_SIZE 2048
+#define DEBUG_BUFFER_SIZE   1024
 
 /* Estado del módulo Debug */
 typedef struct {
@@ -146,6 +146,10 @@ int Debug_Printf(const char *fmt, ...)
     va_start(ap, fmt);
     int len = Debug_vPrintf(fmt, ap);
     va_end(ap);
+    
+    /* Flush immediately para evitar que se entremezclen datos */
+    uart_wait_tx_done(s_debug_state.uart_num, 10);
+    
     return len;
 }
 
@@ -153,28 +157,28 @@ int Debug_Printf(const char *fmt, ...)
 
 void Debug_LogError(const char *msg)
 {
-    Debug_Printf(ANSI_COLOR_RED "[ERROR] %s" ANSI_COLOR_RESET "\n", msg);
+    Debug_Printf(ANSI_COLOR_RED "[ERROR] %s" ANSI_COLOR_RESET "\r\n", msg);
 }
 
 void Debug_LogInfo(const char *msg)
 {
-    Debug_Printf(ANSI_COLOR_GREEN "[INFO] %s" ANSI_COLOR_RESET "\n", msg);
+    Debug_Printf(ANSI_COLOR_GREEN "[INFO] %s" ANSI_COLOR_RESET "\r\n", msg);
 }
 
 void Debug_LogWarning(const char *msg)
 {
-    Debug_Printf(ANSI_COLOR_YELLOW "[WARNING] %s" ANSI_COLOR_RESET "\n", msg);
+    Debug_Printf(ANSI_COLOR_YELLOW "[WARNING] %s" ANSI_COLOR_RESET "\r\n", msg);
 }
 
 void Debug_LogDebug(const char *msg)
 {
-    Debug_Printf(ANSI_COLOR_BLUE "[DEBUG] %s" ANSI_COLOR_RESET "\n", msg);
+    Debug_Printf(ANSI_COLOR_BLUE "[DEBUG] %s" ANSI_COLOR_RESET "\r\n", msg);
 }
 
 /* ============ TELEPLOT PARA TELEMETRÍA ============ */
 
 void Debug_Teleplot(const char *var_name, float value)
 {
-    /* Formato Teleplot: >nombre_variable:valor\n */
-    Debug_Printf(">%s:%.2f\n", var_name, value);
+    /* Formato Teleplot: >nombre_variable:valor\r\n */
+    Debug_Printf(">%s:%.2f\r\n", var_name, value);
 }

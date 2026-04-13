@@ -15,6 +15,7 @@ idf_component_register(
         "Test/Display_Manager/TestDisplay_Manager.c"
         "Test/SMD_Manager/TestSMD_Manager.c"
         "Test/Temp_Ctrl/TestTemp_Ctrl.c"
+        "Test/Debug/TestDebug.c"
         ${UI_SOURCES}
     INCLUDE_DIRS
         "includes"
@@ -24,6 +25,7 @@ idf_component_register(
         "Test/Display_Manager"
         "Test/SMD_Manager"
         "Test/Temp_Ctrl"
+        "Test/Debug"
         "UI"
         "."
     REQUIRES

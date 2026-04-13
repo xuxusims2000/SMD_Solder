@@ -35,7 +35,9 @@ static void MainApp_SMD_Manager_OperationCompleteCallback(SMDManager_Result_t re
 void app_main(void)
 {
   
-  esp_err_t debug_err = Debug_Init(UART_NUM_2, 115200, 17, 16);  
+  esp_err_t debug_err;
+
+  debug_err = Debug_Init(UART_NUM_2, 115200, 17, 16);  
   if (debug_err == ESP_OK) {
     DBG_INFO("Debug Module Initialized");
   } else {
@@ -50,7 +52,7 @@ void app_main(void)
     
   #else
     uint32_t signal;
-    esp_err_t result;
+  
 
     while (1) {
 

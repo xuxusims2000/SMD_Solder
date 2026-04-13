@@ -6,6 +6,7 @@
 #include "TestDisplay_Manager.h"
 #include "TestSMD_Manager.h"
 #include "TestTemp_Ctrl.h"
+#include "Debug/TestDebug.h"
 
 
 TaskHandle_t task1Handle = NULL;
@@ -37,9 +38,11 @@ void test_function() {
     //Test_TempCtrl_1();
     //Test_Temp_Ctrl_PID_TUNE();
 
+    /*----------Module Debug (UART Logging)----------------------*/
+    Test_Debug_All();
 
     /*----------Module SMD Manager----------------------*/
-    Test_smd_manager_1();
+    //Test_smd_manager_1();
 
     
 
