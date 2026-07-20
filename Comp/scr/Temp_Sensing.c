@@ -2,6 +2,18 @@
 
 #include "Temp_Sensing.h"
 
+/* -------------------------DEBUG --------------------------*/
+#define TEMP_SENSING_DEBUG  // Uncomment to enable debug logs for Temp_Sensing module
+
+#ifdef TEMP_SENSING_DEBUG
+
+    #define DBG_SNS(fmt, ...)  Debug_Printf("[Temp_Sensing] " fmt "\r\n", ##__VA_ARGS__)
+    #define TELEPLOT_SNS(var_name, value)  Debug_Teleplot(var_name, value)
+
+#else
+    #define DBG_SNS(fmt, ...)  // No-op when debug is disabled
+
+#endif
 
 #define TEMP_SENSING_SIGNAL_REQUESTED   (1 << 0)  // Signal to request temperature sensing
 #define TEMP_SENSING_SIGNAL_RLEASE      (1 << 1)  // Signal to indicate temperature sensing 

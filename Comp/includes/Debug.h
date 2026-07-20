@@ -5,11 +5,26 @@
 #include "esp_err.h"
 #include "driver/uart.h"
 
+#define DEBUG_TX_PIN 17
+#define DEBUG_RX_PIN 16
+
 /* ANSI Color Codes */
 #define ANSI_COLOR_RED     "\033[0;31m"
 #define ANSI_COLOR_GREEN   "\033[0;32m"
 #define ANSI_COLOR_YELLOW  "\033[0;33m"
 #define ANSI_COLOR_BLUE    "\033[0;34m"
+#define ANSI_COLOR_MAGENTA "\033[0;35m"
+#define ANSI_COLOR_CYAN    "\033[0;36m"
+#define ANSI_COLOR_WHITE   "\033[0;37m"
+
+/* Bold Colors */
+#define ANSI_COLOR_BOLD_RED     "\033[1;31m"
+#define ANSI_COLOR_BOLD_GREEN   "\033[1;32m"
+#define ANSI_COLOR_BOLD_YELLOW  "\033[1;33m"
+#define ANSI_COLOR_BOLD_BLUE    "\033[1;34m"
+#define ANSI_COLOR_BOLD_MAGENTA "\033[1;35m"
+#define ANSI_COLOR_BOLD_CYAN    "\033[1;36m"
+
 #define ANSI_COLOR_RESET   "\033[0;0m"
 
 /* Configuración del módulo */

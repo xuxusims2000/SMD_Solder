@@ -37,7 +37,7 @@ void app_main(void)
   
   esp_err_t debug_err;
 
-  debug_err = Debug_Init(UART_NUM_2, 115200, 17, 16);  
+  debug_err = Debug_Init(UART_NUM_2, 115200, DEBUG_TX_PIN, DEBUG_RX_PIN);  
   if (debug_err == ESP_OK) {
     DBG_INFO("Debug Module Initialized");
   } else {

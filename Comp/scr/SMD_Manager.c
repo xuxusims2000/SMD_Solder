@@ -2,7 +2,7 @@
 
 
 #include "SMD_Manager.h"
-
+#include "Debug.h"
 /*============================== Defines ==============================*/
 
 #define SMD_MANAGER_SIGNAL_REQUESTED        (1 << 0)
@@ -19,12 +19,22 @@
 #define SMD_MANAGER_SIGNAL_KEY_HOME         (1 << 11)
 #define SMD_MANAGER_SIGNAL_HEAT             (1 << 12)
 
+#define SMD_MANAGER_DEBUG 
+
+#ifdef SMD_MANAGER_DEBUG
+    #define DBG_SM(fmt, ...)  Debug_Printf(ANSI_COLOR_GREEN "[SMD_Manager] " fmt "\r\n", ##__VA_ARGS__)
+    #define TELEPLOT_SM(var_name, value)  Debug_Teleplot(var_name, value)
+#else
+    #define DBG_SM(fmt, ...)  ((void)0)
+    #define TELEPLOT_SM(var_name, value)  ((void)0)
+#endif
 
 /*============================== Static Prototypes ==============================*/
 
 static esp_err_t SMDManager_Requesting(void);
 static esp_err_t SMDManager_Starting(void);
 static uint32_t SMDManager_SignalWait(uint32_t signal, uint32_t timeout);
+
 
 void SMDManager_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer);
 void SMDManager_ScreenAction_Callback(DisplayManager_Button_t button);
@@ -74,6 +84,7 @@ void SMDManager_Init(void)
 {
     if (mainSolder.state == UNDDEFINED && mainSolder.taskHandle == NULL) {
         ESP_LOGI("SMD_Manager", "INIT.");
+        DBG_SM("INIT.");
 
         DisplayManager_Init();
         Temp_Sensing_Init();
@@ -110,6 +121,7 @@ esp_err_t SMDManager_Request (SMDManager_Configuration_t* config){
     if ( xResult == pdTRUE) //Try to take the semaphore, wait 1000 ms if not available
     {
         ESP_LOGI("SMDManager_Request", "SMD Manager requested.");
+        DBG_SM("SMD Manager requested.");
 
         memcpy(&mainSolder.config, config, sizeof(SMDManager_Configuration_t));
         mainSolder.state = REQUESTING;
@@ -157,6 +169,7 @@ esp_err_t SMDManager_Start(void){
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_START, eSetBits);
       result = ESP_OK;
         ESP_LOGI("SMDManager_Start", "Starting SMD Manager");
+        DBG_SM("Starting SMD Manager");
     }
     else {
         ESP_LOGE("SMDManager_Start", "Invalid state (%d)", mainSolder.state);
@@ -243,12 +256,14 @@ void SMDManager_Task(void *pvParameters){
 
             case POWER_OFF:
                 ESP_LOGI("MAIN_SOLDER", "State: POWER_OFF");
+                DBG_SM("State: POWER_OFF");
                 SMDManager_SignalWait(SMD_MANAGER_SIGNAL_REQUESTED, portMAX_DELAY);
-                ESP_LOGI("MAIN_SOLDER", "State: POWER_OFF out of wait");
+                
                 break;
 
             case REQUESTING:
                 ESP_LOGI("MAIN_SOLDER", "State: REQUESTING");
+                DBG_SM("State: REQUESTING");
 
                 result = SMDManager_Requesting();
                 if( result == ESP_OK){
@@ -269,6 +284,7 @@ void SMDManager_Task(void *pvParameters){
 
             case REQUESTED:
                 ESP_LOGI("MAIN_SOLDER", "State: REQUESTED");
+                DBG_SM("State: REQUESTED");
 
                 signal = SMDManager_SignalWait(SMD_MANAGER_SIGNAL_START | 
                                                 SMD_MANAGER_SIGNAL_RELEASE, 
@@ -296,7 +312,7 @@ void SMDManager_Task(void *pvParameters){
 
             case IDLE:
                 ESP_LOGI("MAIN_SOLDER", "State: IDLE");
-
+                DBG_SM("State: IDLE");
                 // Identify the current screen 
                 lv_obj_t *screen = DisplayManager_GetScreen();
                 if (screen == NULL) {
@@ -328,29 +344,33 @@ void SMDManager_Task(void *pvParameters){
              
 
                 if (signal & SMD_MANAGER_SIGNAL_SOLDER) {
-                   mainSolder.state = SOLDERING;
+                    DBG_SM("State: SOLDERING");
+                    mainSolder.state = SOLDERING;
 
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_SET_TEMP) {
-                    
+                    DBG_SM("State: SET_TEMP");
                     mainSolder.state = SET_TEMP;
 
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_SETTINGS) {
+                    DBG_SM("State: SETTINGS");
                     mainSolder.state = SETTINGS;
 
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_UPDATE_TEMP) {
+                    DBG_SM("State: UPDATE_TEMP");
                     mainSolder.temperature = TempSensing_GetTemperature();
                     DisplayManager_UpdateTemperature(mainSolder.temperature);
                     ESP_LOGI("Display_Manager_Test_Task", "Readed Temperature: %.2f °C",  mainSolder.temperature);
+                    //TELEPLOT_SNS("Temperature", mainSolder.temperature);
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_STOP) {
-                    
+                    DBG_SM("State: STOP");
 
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_RELEASE) {
-                    
+                    DBG_SM("State: RELEASE");
 
                 }
 
@@ -427,9 +447,15 @@ void SMDManager_Task(void *pvParameters){
                 }
 
                 break;
+
+            case SETTINGS:
+                ESP_LOGI("MAIN_SOLDER", "State: SETTINGS");
+                DBG_SM("State: SETTINGS");
+                break;
             
             case SOLDERING:
                 ESP_LOGI("MAIN_SOLDER", "State: SOLDERING");
+                DBG_SM("State: SOLDERING");
                 
                 signal = SMDManager_SignalWait(SMD_MANAGER_SIGNAL_STOP | 
                                                 SMD_MANAGER_SIGNAL_RELEASE, 
@@ -439,6 +465,7 @@ void SMDManager_Task(void *pvParameters){
             case RELAXED:
                 // Handle RELAXED state
                 ESP_LOGI("MAIN_SOLDER", "State: RELAXED");
+                DBG_SM("State: RELAXED");
                 break;
 
             case RELEASING:
@@ -569,6 +596,7 @@ void SMDManager_UpdateTemperature_Timer_Callback (TimerHandle_t xTimer){
     // Code to execute when the timer expires
         if ( mainSolder.state == IDLE || mainSolder.state == SET_TEMP)
     {
+        //DBG_SM("Timer tick -> update temperature");
         xTaskNotify(mainSolder.taskHandle, SMD_MANAGER_SIGNAL_UPDATE_TEMP, eSetBits);
     }
     //ESP_LOGI("Timer_Callback", "SMDManager_UpdateTemperature_Timer_Callback executed");

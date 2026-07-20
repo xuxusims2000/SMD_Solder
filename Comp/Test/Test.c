@@ -39,10 +39,10 @@ void test_function() {
     //Test_Temp_Ctrl_PID_TUNE();
 
     /*----------Module Debug (UART Logging)----------------------*/
-    Test_Debug_All();
+    //Test_Debug_All();
 
     /*----------Module SMD Manager----------------------*/
-    //Test_smd_manager_1();
+    Test_smd_manager_1();
 
     
 

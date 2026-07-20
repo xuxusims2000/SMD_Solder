@@ -7,6 +7,7 @@
 #include "esp_log.h" 
 #include "driver/gpio.h"
 #include <string.h>
+#include "debug.h"
 
 
 

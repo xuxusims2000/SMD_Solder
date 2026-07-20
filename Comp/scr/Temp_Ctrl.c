@@ -1,6 +1,7 @@
 
 
 #include "Temp_Ctrl.h"
+#include "Debug.h"
 
 #define TEMP_CTRL_SIGNAL_REQUESTED   (1 << 0)  // Signal to request temperature control
 #define TEMP_CTRL_SIGNAL_RELEASE     (1 << 1)  // Signal to indicate temperature control 
@@ -55,6 +56,23 @@ static TempCtrl_t temp_ctrl = {
     .heat_up_process_active = false,
     // Initialize other members as needed
 };
+
+/* Private macros -----------------------------------------------------------  */
+
+#define TEMP_CTRL_DEBUG  // Uncomment to enable debug logs for Temp_Ctrl module
+
+#ifdef TEMP_CTRL_DEBUG
+
+    #define DBG_TC(fmt, ...)  Debug_Printf("[Temp_Ctrl] " fmt "\r\n", ##__VA_ARGS__)
+    #define TELEPLOT_TC(var_name, value)  Debug_Teleplot(var_name, value)
+
+#else
+    #define DBG_TC(fmt, ...)  // No-op when debug is disabled
+
+#endif
+
+
+
 
 void TempCtrl_Init(void){
 
@@ -249,10 +267,11 @@ void Temp_Ctrl_Release(void){
 
                 while (temp_ctrl.heat_up_process_active == true)
                 {
-                    printf(">Current Temperature: %lu°C\n", temp_ctrl.temp);
-                    printf(">Target Temperature: %lu°C\n", temp_ctrl.target_temperature);
+                    //printf(">Current Temperature: %lu°C\n", temp_ctrl.temp);
+                    //printf(">Target Temperature: %lu°C\n", temp_ctrl.target_temperature);
+                    TELEPLOT_TC("Current_Temperature", temp_ctrl.temp);
+                    TELEPLOT_TC("Target_Temperature", temp_ctrl.target_temperature);
                     TempCtrl_CalculateTemp();
-                    //set_pwm_duty(512); //Example set duty cycle to 50% 
                     vTaskDelay(pdMS_TO_TICKS(100));  // Delay for 5000 ms (5 seconds)
                     ESP_LOGI("Temp_Ctrl_Task", "Stop temperature %d", temp_ctrl.heat_up_process_active);
 
