@@ -72,10 +72,10 @@ void TempCtrl_StopTemperatureControl(void);
 #define Tmax 350 //Tempere max that hotplate can get
 
 
-uint64_t Temp_Compute_pid(double setpoint, double current_temp);
+double Temp_Compute_pid(double setpoint, double current_temp);
 uint16_t Temperature2PWM(uint16_t temperature);
 
-void Test_PID_control_(void);
+
 
 
 #endif /* TEMP_CTRL_H_ */

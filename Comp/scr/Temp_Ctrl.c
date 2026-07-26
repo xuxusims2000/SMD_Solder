@@ -9,10 +9,29 @@
 #define TEMP_CTRL_SIGNAL_STOP        (1 << 3)  // Signal to release temperature control
 #define TEMP_CTRL_SIGNAL_SET_TEMP    (1 << 4)  // Signal to set temperature
 
+#define TEMP_CTRL_DEBUG 
+
+#ifdef TEMP_CTRL_DEBUG
+    #define DBG_TC(fmt, ...)  Debug_Printf(ANSI_COLOR_GREEN "[Temp_Ctrl] " fmt "\r\n", ##__VA_ARGS__)
+    #define TOP_DBG_TC(title) \
+        do { \
+            Debug_Printf("//====================================//\r\n"); \
+            Debug_Printf("// %s //\r\n", title); \
+            Debug_Printf("//====================================//\r\n"); \
+        } while (0)
+    #define TELEPLOT_TC(var_name, value)  Debug_Teleplot(var_name, value)
+#else
+    #define DBG_TC(fmt, ...)  ((void)0)
+    #define TOP_DBG_TC(title) ((void)0)
+    #define TELEPLOT_TC(var_name, value)  ((void)0)
+#endif
+
 
 esp_err_t tempCtrl_Requesting(void);
 uint32_t tempCtrlSignalWait(uint32_t signal, uint32_t timeout);
 esp_err_t tempCtrl_Releasing(void);
+
+void TempCtrl_PID_Callback(TimerHandle_t xTimer);
 
 esp_err_t config_pwm(void);
 //esp_err_t set_pwm_duty(uint32_t duty);
@@ -28,16 +47,18 @@ typedef struct {
 
     TaskHandle_t                    taskHandle;
     SemaphoreHandle_t               TempCtrl_xSemaphoreHandle; //Defines a semaphore to manage the resource
+
+    TimerHandle_t                   pid_timer; // Timer for PID control
     
     uint32_t                        pwm_duty;
  
-    uint32_t                        last_error;
-    uint32_t                        integral;
+    double                          last_error;
+    double                          integral;
     const double                    dt;
    
     uint32_t                        target_temperature;
     uint32_t                        temp;
-    uint32_t                        pid_output;
+    double                          pid_output;
 
     bool                            heat_up_process_active;
 
@@ -56,22 +77,6 @@ static TempCtrl_t temp_ctrl = {
     .heat_up_process_active = false,
     // Initialize other members as needed
 };
-
-/* Private macros -----------------------------------------------------------  */
-
-#define TEMP_CTRL_DEBUG  // Uncomment to enable debug logs for Temp_Ctrl module
-
-#ifdef TEMP_CTRL_DEBUG
-
-    #define DBG_TC(fmt, ...)  Debug_Printf("[Temp_Ctrl] " fmt "\r\n", ##__VA_ARGS__)
-    #define TELEPLOT_TC(var_name, value)  Debug_Teleplot(var_name, value)
-
-#else
-    #define DBG_TC(fmt, ...)  // No-op when debug is disabled
-
-#endif
-
-
 
 
 void TempCtrl_Init(void){
@@ -254,37 +259,26 @@ void Temp_Ctrl_Release(void){
             ESP_LOGI("Temp_Ctrl_Task", "STATE: START");
 
             //Here so far doing test in the future shold do the curve of temperature
-            
-            //set_pwm_duty(200); //Example set duty cycle to 50%
+    
+            signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP | 
+                                         TEMP_CTRL_SIGNAL_SET_TEMP ,  
+                                         portMAX_DELAY);
 
 
-            signal = tempCtrlSignalWait( TEMP_CTRL_SIGNAL_STOP | TEMP_CTRL_SIGNAL_SET_TEMP ,  portMAX_DELAY);
-
-        
-           if (signal & TEMP_CTRL_SIGNAL_SET_TEMP)
+            if (signal & TEMP_CTRL_SIGNAL_SET_TEMP)
             {
-                 
-
-                while (temp_ctrl.heat_up_process_active == true)
+                if (temp_ctrl.heat_up_process_active)
                 {
-                    //printf(">Current Temperature: %lu°C\n", temp_ctrl.temp);
-                    //printf(">Target Temperature: %lu°C\n", temp_ctrl.target_temperature);
                     TELEPLOT_TC("Current_Temperature", temp_ctrl.temp);
                     TELEPLOT_TC("Target_Temperature", temp_ctrl.target_temperature);
                     TempCtrl_CalculateTemp();
-                    vTaskDelay(pdMS_TO_TICKS(100));  // Delay for 5000 ms (5 seconds)
-                    ESP_LOGI("Temp_Ctrl_Task", "Stop temperature %d", temp_ctrl.heat_up_process_active);
-
-
+                    
                 }
-                 
-                
-                ESP_LOGI("Temp_Ctrl_Task", "Temperature Set to: %lu", temp_ctrl.target_temperature);
-           
             }
-            
-               else if (signal & TEMP_CTRL_SIGNAL_STOP)
+            else if (signal & TEMP_CTRL_SIGNAL_STOP)
             {
+                temp_ctrl.heat_up_process_active = false;
+                TempCtrl_StopTemperatureControl();
                 temp_ctrl.state = TEMP_CTRL_REQUESTED;
                 ESP_LOGI("Temp_Ctrl_Task", "STATE: REQUESTED");
                 if (temp_ctrl.config.callbacks.OperationCompleteCallback != NULL)
@@ -292,9 +286,8 @@ void Temp_Ctrl_Release(void){
                     temp_ctrl.config.callbacks.OperationCompleteCallback(TEMP_CTRL_RESULT_STOP);
                 }
             }
+            
             break;
-
-
 
         case TEMP_CTRL_RELEASING:
             ESP_LOGI("Temp_Ctrl_Task", "STATE: RELEASING");
@@ -378,23 +371,24 @@ esp_err_t config_pwm(void){
 
 
 /*------------------PID Controller Function--------------------------*/ 
-uint64_t Temp_Compute_pid(double setpoint, double current_temp) {
-    // Compute error
-    uint64_t error = setpoint - current_temp;
+double Temp_Compute_pid(double setpoint, double current_temp) {
+    // Compute error as a signed value
+    double error = setpoint - current_temp;
+    //DBG_TC("Error: %.2f", error);
 
     // Integral term (accumulated error)
     temp_ctrl.integral += error * temp_ctrl.dt;
 
     // Derivative term (rate of change of error)
-    uint64_t derivative = (error - temp_ctrl.last_error) / temp_ctrl.dt;
+    double derivative = (error - temp_ctrl.last_error) / temp_ctrl.dt;
 
     // Compute PID output
-    uint64_t output = (Kp * error) + (Ki * temp_ctrl.integral) + (Kd * derivative);
+    double output = (Kp * error) + (Ki * temp_ctrl.integral) + (Kd * derivative);
 
     // Save current error for next iteration
     temp_ctrl.last_error = error;
 
-return output;
+    return output;
 }
 
 uint16_t Temperature2PWM(uint16_t temperature){ // doit as define
@@ -404,22 +398,6 @@ uint16_t Temperature2PWM(uint16_t temperature){ // doit as define
     return new_duty;
 }
 
-void Test_PID_control_(){
-
-    //uint16_t new_duty = 0;
-    //ret = set_pwm();
-    //set_pwm_duty(0);
-   
-    //uint16_t new_duty = 0;
-    //new_temperature = compute_pid(50,current_temperature );
-
-    //new_duty = Temperature2PWM(new_temperature);
-    //set_pwm_duty(new_duty);
-
-    //vTaskDelay(pdMS_TO_TICKS(1000)); // Delay 1 second
-    
-
-}
 
 esp_err_t TempCtrl_UpdateTemperature(uint32_t temperature){ //fpaso de flaot a uint32
     esp_err_t result = ESP_FAIL;
@@ -432,49 +410,64 @@ esp_err_t TempCtrl_UpdateTemperature(uint32_t temperature){ //fpaso de flaot a u
 
 esp_err_t TempCtrl_SetTemperature(uint32_t temp) //fpaso de flaot a uint32
 {
-   
-    //may be i have to validate temp range
-    //may be i havt to check the conversion from float to uint32
-    
+    temp_ctrl.integral = 0.0;
+    temp_ctrl.last_error = 0.0;
+
     temp_ctrl.target_temperature = temp;
     temp_ctrl.heat_up_process_active = true;
-    //set_pwm_duty(512); //Example set duty cycle to 50%
-    xTaskNotify(temp_ctrl.taskHandle, TEMP_CTRL_SIGNAL_SET_TEMP, eSetBits);
+
+    //activar el timer de pid
+    if (xTimerStart(temp_ctrl.pid_timer, 0) != pdPASS) {
+        ESP_LOGE("Temp_Ctrl", "Failed to start PID timer");
+        return ESP_FAIL;
+    }
+    DBG_TC("STARTED TIMER HEAT");
+
     return ESP_OK;
 }
 
 void TempCtrl_StopTemperatureControl(void)
 {
     temp_ctrl.heat_up_process_active = false;
+    
+    if (xTimerStop(temp_ctrl.pid_timer, 0) != pdPASS) {
+        ESP_LOGE("Temp_Ctrl", "Failed to stop PID timer");
+    }
+
     set_pwm_duty(0); //Example set duty cycle to 50% 
     ESP_LOGI("Temp_Ctrl_Task", "Stop temperature %d", temp_ctrl.heat_up_process_active);
+    DBG_TC("Stop Heat Up Process %d", temp_ctrl.heat_up_process_active);
 
 
 }
 
 void TempCtrl_CalculateTemp(void)
 {
+    double raw_pid_output;
     uint32_t aux_duty;
-    
-    temp_ctrl.pid_output = Temp_Compute_pid(temp_ctrl.target_temperature, temp_ctrl.temp);
-    //if (temp_ctrl.pid_output < 0) temp_ctrl.pid_output = 0;
-    //if (temp_ctrl.pid_output > 1023) temp_ctrl.pid_output = 1023;
-    ESP_LOGI("set_pwm_duty", "PWM duty set to %lu", temp_ctrl.pid_output);
 
-    aux_duty = Temperature2PWM(temp_ctrl.pid_output);
+    //DBG_TC("CalculateTemp");
+    raw_pid_output = Temp_Compute_pid((double)temp_ctrl.target_temperature, (double)temp_ctrl.temp);
+
+    if (raw_pid_output < 0.0) {
+        raw_pid_output = 0.0;
+    } else if (raw_pid_output > 1023.0) {
+        raw_pid_output = 1023.0;
+    }
+
+    temp_ctrl.pid_output = raw_pid_output;
+    aux_duty = (uint32_t)raw_pid_output;
     set_pwm_duty(aux_duty);
 }
 
    
 /* ---------------Signals---------------*/
 
-uint32_t tempCtrlSignalWait(uint32_t signal, uint32_t timeout)
+uint32_t tempCtrlSignalWait(uint32_t signal, TickType_t timeout)
 {
     uint32_t notifiedValue = 0;
 
-    printf("Waiting for signal %" PRIu32 " with timeout %" PRIu32 " ms\n", signal, timeout);
-
-    xTaskNotifyWait(0x00, signal, &notifiedValue, pdMS_TO_TICKS(timeout));
+    xTaskNotifyWait(0x00, signal, &notifiedValue, timeout);
 
     return notifiedValue;
 }
@@ -482,6 +475,14 @@ uint32_t tempCtrlSignalWait(uint32_t signal, uint32_t timeout)
 esp_err_t tempCtrl_Requesting(void)
 {
     esp_err_t result = ESP_FAIL;
+
+    temp_ctrl.pid_timer = xTimerCreate("PID_Timer",
+                         pdMS_TO_TICKS(150), pdTRUE, NULL, TempCtrl_PID_Callback);
+
+    if (temp_ctrl.pid_timer == NULL) {
+        ESP_LOGE("Temp_Ctrl", "Failed to create PID timer");
+        return ESP_FAIL;
+    }
 
     
     result = ESP_OK;
@@ -512,4 +513,16 @@ esp_err_t tempCtrl_Releasing(void)
     temp_ctrl.state = state;
 }
 
+/*------------------------Callbacks----------------------------*/
+
+void TempCtrl_PID_Callback(TimerHandle_t xTimer)
+{
+    // This callback will be called every 100 ms
+    // Notify the task only when heat-up process is active and controller is running.
+    if (temp_ctrl.heat_up_process_active && temp_ctrl.state == TEMP_CTRL_START)
+    {
+        //DBG_TC("Callback SET_TEMP");
+        xTaskNotify(temp_ctrl.taskHandle, TEMP_CTRL_SIGNAL_SET_TEMP, eSetBits);
+    }
+}
 

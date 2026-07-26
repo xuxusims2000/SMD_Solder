@@ -20,7 +20,8 @@ void ui_event_BHome3(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
 
-    if(event_code == LV_EVENT_RELEASED) {
+    if(event_code == LV_EVENT_CLICKED) {
+        BHome_Cliked(e);
         _ui_screen_change(&ui_SCHome, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_SCHome_screen_init);
     }
 }
