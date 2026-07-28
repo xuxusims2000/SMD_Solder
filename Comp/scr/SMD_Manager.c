@@ -22,7 +22,7 @@
 #define SMD_MANAGER_DEBUG 
 
 #ifdef SMD_MANAGER_DEBUG
-    #define DBG_SM(fmt, ...)  Debug_Printf(ANSI_COLOR_GREEN "[SMD_Manager] " fmt "\r\n", ##__VA_ARGS__)
+    #define DBG_SM(fmt, ...)  Debug_Printf(ANSI_COLOR_YELLOW "[SMD_Manager] " fmt "\r\n", ##__VA_ARGS__)
     #define TELEPLOT_SM(var_name, value)  Debug_Teleplot(var_name, value)
         #define TOP_DBG_SM(title) \
         do { \
@@ -365,7 +365,7 @@ void SMDManager_Task(void *pvParameters){
 
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_SET_TEMP) {
-                    DBG_SM("State: SET_TEMP");
+                    //DBG_SM("State: SET_TEMP");
 
                     mainSolder.state_in = false;
                     mainSolder.state = SET_TEMP;
@@ -385,7 +385,7 @@ void SMDManager_Task(void *pvParameters){
                     mainSolder.temperature = TempSensing_GetTemperature();
                     DisplayManager_UpdateTemperature(mainSolder.temperature);
                     //ESP_LOGI("Display_Manager_Test_Task", "Readed Temperature: %.2f °C",  mainSolder.temperature);
-                    TELEPLOT_SM("Temperature", mainSolder.temperature);
+                    //TELEPLOT_SM("Temperature", mainSolder.temperature);
                 }
                 else if (signal & SMD_MANAGER_SIGNAL_STOP) {
                     DBG_SM("State: STOP");

@@ -67,9 +67,11 @@ void TempCtrl_StopTemperatureControl(void);
 #define Ki 0 //0.5      // Integral gain
 #define Kd 0 //1.0      // Derivative gain
 
-#define FREQUENCY_PWM (10) //Frequency of PWM in Hz
+#define FREQUENCY_PWM (1000) // Frequency of PWM in Hz
+#define MAX_PWM_DUTY (512)   // Cap the maximum PWM duty to reduce current spikes
+#define PWM_RAMP_STEP (5)    // Smooth duty changes to avoid sudden power jumps
 
-#define Tmax 350 //Tempere max that hotplate can get
+#define Tmax 350 // Tempere max that hotplate can get
 
 
 double Temp_Compute_pid(double setpoint, double current_temp);

@@ -9,6 +9,24 @@
 #define TEST_SMD_MANAGER_SIGNAL_STOP_COMPLETE          (1 << 2)  // Signal to indicate temperature sensing 
 #define TEST_SMD_MANAGER_SIGNAL_RELEASE_COMPLETE       (1 << 3)  // Signal to release temperature sensing
 
+#define TEST_MANAGER_DEBUG
+
+#ifdef TEST_MANAGER_DEBUG
+    #define DBG_TEST(fmt, ...)  Debug_Printf(ANSI_COLOR_BLUE "[TEST] " fmt "\r\n", ##__VA_ARGS__)
+    #define TELEPLOT_TEST(var_name, value)  Debug_Teleplot(var_name, value)
+        #define TOP_DBG_TEST(title) \
+        do { \
+            Debug_Printf("//====================================//\r\n"); \
+            Debug_Printf("// %s //\r\n", title); \
+            Debug_Printf("//====================================//\r\n"); \
+        } while (0)
+
+#else
+    #define DBG_TEST(fmt, ...)  ((void)0)
+    #define TELEPLOT_TEST(var_name, value)  ((void)0)
+#endif
+
+
 
 typedef struct TestSMDManager_e
 {
@@ -35,6 +53,8 @@ void TestSMD_Manager_OperationCompleteCallback(SMDManager_Result_t result);
 void Test_smd_manager_1(void){
 
     ESP_LOGI("Test_smd_manager_1", "Starting SMD Manager Test 1");
+
+    TOP_DBG_TEST("STARTING SMD MANAGER TEST 1");
 
     SMDManager_Init();
 
