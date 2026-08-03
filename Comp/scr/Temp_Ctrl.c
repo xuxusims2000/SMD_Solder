@@ -78,7 +78,7 @@ static TempCtrl_t temp_ctrl = {
     .TempCtrl_xSemaphoreHandle = NULL,
     .pid_timer = NULL,
     .pwm_duty = 0,
-    .dt = 0.1, // Example time step for PID calculations (100 ms)
+    .dt = PID_SAMPLE_TIME_S,
     .heat_up_process_active = false,
     .dbg_enabled = 0,
     .state_in = false,
@@ -273,8 +273,7 @@ void Temp_Ctrl_Release(void){
                 ESP_LOGI("Temp_Ctrl_Task", "STATE: START");
                 DBG_TC("STATE: START");
             }
-            ESP_LOGI("Temp_Ctrl_Task", "STATE: START");
-            DBG_TC("STATE: START");
+   
 
             //Here so far doing test in the future shold do the curve of temperature
     
@@ -287,8 +286,8 @@ void Temp_Ctrl_Release(void){
             {
                 if (temp_ctrl.heat_up_process_active)
                 {
-                    //TELEPLOT_TC("Current_Temperature", temp_ctrl.temp);
-                    //TELEPLOT_TC("Target_Temperature", temp_ctrl.target_temperature);
+                    TELEPLOT_TC("Current_Temperature", temp_ctrl.temp);
+                    TELEPLOT_TC("Target_Temperature", temp_ctrl.target_temperature);
                     TempCtrl_CalculateTemp();
                     
                 }
@@ -403,6 +402,12 @@ double Temp_Compute_pid(double setpoint, double current_temp) {
 
     // Integral term (accumulated error)
     temp_ctrl.integral += error * temp_ctrl.dt;
+     /*
+    if (temp_ctrl.integral > MAX_PID_INTEGRAL) {
+        temp_ctrl.integral = MAX_PID_INTEGRAL;
+    } else if (temp_ctrl.integral < -MAX_PID_INTEGRAL) {
+        temp_ctrl.integral = -MAX_PID_INTEGRAL;
+    } */
 
     // Derivative term (rate of change of error)
     double derivative = (error - temp_ctrl.last_error) / temp_ctrl.dt;
@@ -413,7 +418,7 @@ double Temp_Compute_pid(double setpoint, double current_temp) {
     // Save current error for next iteration
     temp_ctrl.last_error = error;
 
-    if (temp_ctrl.dbg_enabled == 5) {
+    if (temp_ctrl.dbg_enabled == 50) {
         int32_t output100 = (int32_t)(output * 100.0);
         int32_t error100 = (int32_t)(error * 100.0);
         int32_t integral100 = (int32_t)(temp_ctrl.integral * 100.0);
@@ -469,6 +474,7 @@ esp_err_t TempCtrl_SetTemperature(uint32_t temp) //fpaso de flaot a uint32
 
     temp_ctrl.integral = 0.0;
     temp_ctrl.last_error = 0.0;
+    temp_ctrl.pwm_duty = 0;
 
     temp_ctrl.target_temperature = temp;
     temp_ctrl.heat_up_process_active = true;
@@ -551,7 +557,7 @@ esp_err_t tempCtrl_Requesting(void)
     esp_err_t result = ESP_FAIL;
 
     temp_ctrl.pid_timer = xTimerCreate("PID_Timer",
-                         pdMS_TO_TICKS(150), pdTRUE, NULL, TempCtrl_PID_Callback);
+                         pdMS_TO_TICKS(PID_SAMPLE_TIME_MS), pdTRUE, NULL, TempCtrl_PID_Callback);
 
     if (temp_ctrl.pid_timer == NULL) {
         ESP_LOGE("Temp_Ctrl", "Failed to create PID timer");

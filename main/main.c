@@ -2,6 +2,7 @@
 #include "main.h"
 #include "driver/ledc.h"
 #include "Debug.h"
+#include "esp_system.h"
 
 typedef enum MainApp_State_e{
     MAINAPP_POWER_OFF,

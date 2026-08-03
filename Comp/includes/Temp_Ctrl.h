@@ -63,9 +63,14 @@ void TempCtrl_StopTemperatureControl(void);
 
 
 // PID Constants (Tune these values)
-#define Kp 2.0      // Proportional gain
-#define Ki 0 //0.5      // Integral gain
-#define Kd 0 //1.0      // Derivative gain
+// These values are deliberately more conservative to avoid overshoot and oscillations.
+#define Kp 1.3      // Proportional gain
+#define Ki 0.04     // Integral gain
+#define Kd 0.35     // Derivative gain
+#define MAX_PID_INTEGRAL 300.0
+
+#define PID_SAMPLE_TIME_MS (150)
+#define PID_SAMPLE_TIME_S (0.15f)
 
 #define FREQUENCY_PWM (1000) // Frequency of PWM in Hz
 #define MAX_PWM_DUTY (512)   // Cap the maximum PWM duty to reduce current spikes

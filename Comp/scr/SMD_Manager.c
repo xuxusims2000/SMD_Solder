@@ -19,7 +19,7 @@
 #define SMD_MANAGER_SIGNAL_KEY_HOME         (1 << 11)
 #define SMD_MANAGER_SIGNAL_HEAT             (1 << 12)
 
-#define SMD_MANAGER_DEBUG 
+//#define SMD_MANAGER_DEBUG 
 
 #ifdef SMD_MANAGER_DEBUG
     #define DBG_SM(fmt, ...)  Debug_Printf(ANSI_COLOR_YELLOW "[SMD_Manager] " fmt "\r\n", ##__VA_ARGS__)
@@ -34,6 +34,7 @@
 #else
     #define DBG_SM(fmt, ...)  ((void)0)
     #define TELEPLOT_SM(var_name, value)  ((void)0)
+    #define TOP_DBG_SM(title) ((void)0)
 #endif
 
 /*============================== Static Prototypes ==============================*/
